@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --command-bg: #f9f9ff;
+  --command-text: #181c23;
+  --command-text-secondary: #5e5e63;
+  --command-primary: #0059b5;
+  --command-primary-hover: #00458f;
+  --command-border: #c1c6d6;
+}
+
+.command-deck-stage {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--command-bg);
+  background-image: radial-gradient(circle at 50% 30%, rgba(0, 89, 181, 0.04) 0%, transparent 60%),
+                    linear-gradient(180deg, #ffffff 0%, #f9f9ff 100%);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+  transition: opacity 500ms cubic-bezier(0.16, 1, 0.3, 1), transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Light grid pattern matching rest of app */
+.command-deck-stage .grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(193, 198, 214, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(193, 198, 214, 0.15) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse at 50% 50%, black 0%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 0%, transparent 75%);
+}
+
+.command-deck-stage .spline-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Transition state when clicking Enter User Dashboard */
+.command-deck-stage.transition-exit {
+  opacity: 0;
+  transform: scale(0.96);
+  pointer-events: none;
+}
+
+.command-deck-stage.transition-exit .spline-container {
+  transform: scale(0.96);
+  opacity: 0;
+}
+
+/* Hero Center Container */
+.hero-content-center {
+  position: absolute;
+  bottom: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  text-align: center;
+  width: 100%;
+  max-width: 600px;
+  padding: 0 1.5rem;
+  pointer-events: auto;
+}
+
+.hero-title {
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #181c23;
+  margin: 0;
+  font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  user-select: none;
+  background: linear-gradient(135deg, #181c23 0%, #0059b5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-subtitle {
+  font-size: 1.05rem;
+  color: #5e5e63;
+  margin: 0;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Primary Action Button: Enter User Dashboard */
+.btn-enter-dashboard {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background-color: var(--command-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  padding: 0.9rem 2.25rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(0, 89, 181, 0.25), 0 2px 4px rgba(0, 89, 181, 0.15);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  outline: none;
+}
+
+.btn-enter-dashboard:hover {
+  background-color: var(--command-primary-hover);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 14px 32px rgba(0, 89, 181, 0.35), 0 4px 8px rgba(0, 89, 181, 0.2);
+}
+
+.btn-enter-dashboard:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-enter-dashboard .spinner-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

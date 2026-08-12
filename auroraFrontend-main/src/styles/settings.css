@@ -1,0 +1,179 @@
+/* Apple-Inspired Settings Page CSS */
+
+.apple-settings-page {
+  --bg-color: #FBFBFD;
+  --text-main: #1D1D1F;
+  --text-muted: #86868B;
+  --primary-blue: #0071e3;
+  --border-color: #E5E5EA;
+  --card-bg: #FFFFFF;
+
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  min-height: calc(100vh - 70px);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.apple-settings-page * {
+  box-sizing: border-box;
+}
+
+.apple-settings-container {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.apple-settings-header {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1.5rem;
+}
+
+.apple-settings-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0 0 0.35rem;
+  letter-spacing: -0.01em;
+}
+
+.apple-settings-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .apple-settings-layout {
+    grid-template-columns: 220px 1fr;
+  }
+}
+
+/* Left Sidebar Menu */
+.apple-settings-sidebar {
+  display: flex;
+  flex-direction: flex-column;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.apple-settings-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.apple-settings-tab:hover {
+  color: var(--text-main);
+  background-color: rgba(0, 0, 0, 0.025);
+}
+
+.apple-settings-tab.active {
+  color: var(--primary-blue);
+  background-color: rgba(0, 113, 227, 0.08);
+  font-weight: 600;
+}
+
+/* Right Settings Content Panel */
+.apple-settings-panel {
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.apple-settings-section-head {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+}
+
+.apple-settings-section-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0 0 0.25rem;
+}
+
+.apple-settings-section-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Form Groups & Rows */
+.apple-settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.apple-settings-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+@media (min-width: 640px) {
+  .apple-settings-row {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    align-items: center;
+    gap: 1.5rem;
+  }
+}
+
+.apple-settings-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.apple-settings-input {
+  width: 100%;
+  max-width: 400px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.88rem;
+  color: var(--text-main);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.apple-settings-input:focus {
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.12);
+}
+
+.apple-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #F0F0F2;
+}
+
+.apple-settings-page .material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-size: 20px;
+  vertical-align: middle;
+}

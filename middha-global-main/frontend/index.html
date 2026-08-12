@@ -1,0 +1,4055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aurora Chatbot</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5;
+      height: 100vh;
+      display: flex;
+    }
+
+    /* ── Sidebar ───────────────────────────────────────── */
+    #sidebar {
+      width: 260px;
+      background: #1a1a2e;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    #sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    #new-chat-btn {
+      width: 100%;
+      padding: 10px 16px;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #new-chat-btn:hover { background: rgba(255,255,255,0.2); }
+
+    #session-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .session-item {
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: rgba(255,255,255,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.15s;
+      margin-bottom: 2px;
+    }
+
+    .session-item:hover { background: rgba(255,255,255,0.1); }
+    .session-item.active { background: rgba(255,255,255,0.15); color: #fff; }
+
+    .session-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    .delete-session-btn {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.4);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 0 4px;
+      flex-shrink: 0;
+      display: none;
+    }
+
+    .session-item:hover .delete-session-btn { display: block; }
+    .delete-session-btn:hover { color: #ff6b6b; }
+
+    /* ── Main area ─────────────────────────────────────── */
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    header {
+      background: #1a1a2e;
+      color: #fff;
+      padding: 16px 24px;
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    header span { font-size: 22px; }
+
+    #chat-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .message {
+      max-width: 75%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      line-height: 1.5;
+      font-size: 14px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: #1a1a2e;
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.assistant {
+      align-self: flex-start;
+      background: #fff;
+      color: #1a1a1a;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .message.assistant.streaming {
+      border-left: 3px solid #4a6cf7;
+    }
+
+    .tool-indicator {
+      font-size: 12px;
+      color: #4a6cf7;
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    .tool-result-card {
+      align-self: flex-start;
+      max-width: 85%;
+      background: #f8f9fb;
+      border-left: 4px solid #4a6cf7;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .tool-result-header {
+      font-size: 11px;
+      font-weight: 700;
+      color: #4a6cf7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .tool-result-body {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 12px;
+      color: #333;
+      max-height: 300px;
+      overflow-y: auto;
+      line-height: 1.5;
+    }
+
+    .tool-result-card.loading .tool-result-header::after {
+      content: ' ⏳';
+    }
+
+    #input-area {
+      padding: 16px 24px;
+      background: #fff;
+      border-top: 1px solid #e0e0e0;
+      display: flex;
+      gap: 12px;
+    }
+
+    #message-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid #d0d0d0;
+      border-radius: 24px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #message-input:focus { border-color: #4a6cf7; }
+
+    #send-btn {
+      padding: 12px 24px;
+      background: #1a1a2e;
+      color: #fff;
+      border: none;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #send-btn:hover { background: #16213e; }
+    #send-btn:disabled { background: #999; cursor: not-allowed; }
+
+    .welcome {
+      text-align: center;
+      color: #888;
+      margin-top: 60px;
+      font-size: 15px;
+      line-height: 2;
+    }
+
+    .welcome h2 {
+      color: #1a1a2e;
+      margin-bottom: 8px;
+      font-size: 22px;
+    }
+
+    /* ── COGS uploader ─────────────────────────────────── */
+    #cogs-panel {
+      padding: 12px 16px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.85);
+      font-size: 12px;
+    }
+    #cogs-panel h4 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 8px;
+    }
+    #cogs-panel button, #cogs-panel a {
+      width: 100%;
+      padding: 8px 10px;
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-bottom: 6px;
+      text-align: center;
+      text-decoration: none;
+      display: block;
+      box-sizing: border-box;
+    }
+    #cogs-panel button:hover, #cogs-panel a:hover { background: rgba(255,255,255,0.16); }
+    #cogs-paste {
+      width: 100%;
+      height: 80px;
+      padding: 6px 8px;
+      background: rgba(0,0,0,0.25);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 11px;
+      margin-bottom: 6px;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    #cogs-status {
+      font-size: 11px;
+      color: rgba(255,255,255,0.6);
+      margin-top: 4px;
+      min-height: 14px;
+    }
+    #cogs-file { display: none; }
+
+    /* ── Login overlay ──────────────────────────────────── */
+    #login-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(20, 22, 40, 0.72);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    #login-overlay.visible { display: flex; }
+
+    #login-card {
+      width: 360px;
+      background: #fff;
+      padding: 28px 28px 24px;
+      border-radius: 14px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    }
+    #login-card h2 {
+      font-size: 20px;
+      color: #1a1a2e;
+      margin-bottom: 6px;
+    }
+    #login-card p {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 18px;
+    }
+    #login-card label {
+      display: block;
+      font-size: 12px;
+      color: #444;
+      margin-bottom: 4px;
+      margin-top: 12px;
+      font-weight: 600;
+    }
+    #login-card input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d0d0d0;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+    }
+    #login-card input:focus { border-color: #4a6cf7; }
+    #login-card button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 11px;
+      background: #1a1a2e;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #login-card button:hover { background: #16213e; }
+    #login-card button:disabled { background: #999; cursor: not-allowed; }
+    #login-error {
+      margin-top: 12px;
+      color: #c62828;
+      font-size: 13px;
+      min-height: 16px;
+    }
+
+    /* ── Sidebar user / logout ──────────────────────────── */
+    #sidebar-footer {
+      padding: 12px 16px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+    }
+    #user-email {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-bottom: 6px;
+    }
+    #logout-btn {
+      width: 100%;
+      padding: 6px 10px;
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    #logout-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+    /* ── Tab nav + Restock view ─────────────────────────── */
+    #tab-nav {
+      display: flex;
+      background: #fff;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 0 24px;
+      gap: 4px;
+    }
+    .tab-btn {
+      padding: 12px 18px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      font-size: 13px;
+      font-weight: 600;
+      color: #777;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab-btn:hover { color: #1a1a2e; }
+    .tab-btn.active { color: #1a1a2e; border-bottom-color: #4a6cf7; }
+
+    #restock-view {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+    #restock-view.visible { display: flex; }
+
+    #restock-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    #restock-toolbar h2 {
+      font-size: 18px;
+      color: #1a1a2e;
+      margin-right: auto;
+    }
+    #restock-toolbar button {
+      padding: 8px 14px;
+      background: #1a1a2e;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    #restock-toolbar button.secondary {
+      background: #fff;
+      color: #1a1a2e;
+      border: 1px solid #d0d0d0;
+    }
+    #restock-toolbar button:disabled { opacity: 0.6; cursor: not-allowed; }
+    #restock-stamp { font-size: 12px; color: #888; }
+    #restock-count {
+      font-size: 12px;
+      color: #555;
+      background: #eef1f7;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-variant-numeric: tabular-nums;
+    }
+    #restock-show-no-demand-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #555;
+      cursor: pointer;
+      user-select: none;
+    }
+    #restock-show-no-demand-label input { cursor: pointer; }
+
+    #restock-settings {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 14px 16px;
+      display: none;
+      flex-wrap: wrap;
+      gap: 14px;
+      font-size: 13px;
+    }
+    #restock-settings.visible { display: flex; }
+    #restock-settings label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    #restock-settings input {
+      padding: 7px 10px;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      font-size: 13px;
+      width: 110px;
+    }
+    #restock-settings button {
+      padding: 7px 14px;
+      background: #4a6cf7;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      align-self: flex-end;
+    }
+
+    #restock-table-wrap {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      overflow: auto;
+      max-height: calc(100vh - 280px);
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+    table.restock {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 13px;
+      min-width: 1100px;
+    }
+    table.restock thead th {
+      background: #f1f5f9;
+      color: #334155;
+      text-align: left;
+      padding: 12px 14px;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 2px solid #e2e8f0;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      white-space: nowrap;
+    }
+    table.restock thead th:first-child {
+      left: 0;
+      z-index: 3;
+    }
+    table.restock tbody tr {
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      transition: background 0.12s ease;
+    }
+    table.restock tbody tr:nth-child(even) { background: #fafbfc; }
+    table.restock tbody tr:hover { background: #eef4ff; }
+    table.restock tbody tr:last-child { border-bottom: none; }
+    table.restock td {
+      padding: 12px 14px;
+      color: #0f172a;
+      vertical-align: middle;
+      line-height: 1.45;
+    }
+    table.restock td.sku-cell {
+      max-width: 240px;
+      min-width: 180px;
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      background: inherit;
+      border-right: 1px solid #f1f5f9;
+    }
+    table.restock tbody tr:nth-child(even) td.sku-cell { background: #fafbfc; }
+    table.restock tbody tr:hover td.sku-cell { background: #eef4ff; }
+    table.restock .sku-name {
+      display: block;
+      font-weight: 600;
+      color: #0f172a;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    table.restock .num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: #1e293b;
+      white-space: nowrap;
+    }
+    table.restock .num-strong {
+      font-weight: 700;
+      color: #1d4ed8;
+    }
+    table.restock .date-cell {
+      color: #475569;
+      white-space: nowrap;
+      font-size: 12px;
+    }
+    table.restock .next-arrival {
+      font-size: 12px;
+      color: #334155;
+    }
+    table.restock .next-arrival strong { color: #0f172a; }
+    table.restock .next-arrival-none { color: #94a3b8; }
+    table.restock .next-arrival-more {
+      font-size: 11px;
+      color: #64748b;
+      margin-left: 4px;
+    }
+    .urgency-pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .urgency-red    { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .urgency-orange { background: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
+    .urgency-amber  { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .urgency-green  { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .urgency-grey   { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+    /* Not-buyable rows — dim to signal Amazon has blocked / suppressed
+       the listing so the seller doesn't mistake stale suggested-qty for
+       an actionable restock recommendation. */
+    table.restock tbody tr.row-not-buyable td,
+    table.restock tbody tr.row-not-buyable td.sku-cell {
+      color: #94a3b8;
+      background: #f8fafc;
+    }
+    table.restock tbody tr.row-not-buyable:hover,
+    table.restock tbody tr.row-not-buyable:hover td.sku-cell {
+      background: #f1f5f9;
+    }
+    .not-buyable-badge {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    .restock-loading {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #eff6ff, #f8fafc);
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      color: #1e40af;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .restock-loading.visible { display: flex; }
+    .restock-loading-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #93c5fd;
+      border-top-color: #1d4ed8;
+      border-radius: 50%;
+      animation: restock-spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes restock-spin { to { transform: rotate(360deg); } }
+
+    /* Orders tab — reuses .restock table styles */
+    #orders-view {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 24px;
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+    #orders-view.visible { display: flex; }
+    #orders-toolbar {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    #orders-toolbar h2 {
+      font-size: 18px;
+      color: #1a1a2e;
+      margin-right: auto;
+      align-self: center;
+    }
+    #orders-toolbar label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    #orders-toolbar input,
+    #orders-toolbar select {
+      padding: 7px 10px;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      font-size: 13px;
+      background: #fff;
+    }
+    #orders-toolbar input[type=number] { width: 90px; }
+    #orders-toolbar input[type=search] { width: 180px; }
+    #orders-toolbar #orders-refresh {
+      padding: 8px 16px;
+      background: #1a1a2e;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    #orders-toolbar #orders-refresh:disabled { opacity: 0.6; cursor: not-allowed; }
+    #orders-stamp { font-size: 12px; color: #888; align-self: center; }
+    #orders-table-wrap {
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid #e0e0e0;
+      overflow: auto;
+      max-height: calc(100vh - 260px);
+    }
+    #orders-table-wrap thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    #orders-empty {
+      padding: 32px;
+      text-align: center;
+      color: #888;
+      background: #fff;
+      border: 1px dashed #d0d0d0;
+      border-radius: 10px;
+    }
+    .status-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      background: #ececf0;
+      color: #444;
+    }
+    .status-shipped { background: #d8f3df; color: #1b5e20; }
+    .status-pending, .status-unshipped { background: #fff5cf; color: #8a6d00; }
+    .status-canceled, .status-unfulfillable { background: #ffe2e2; color: #b71c1c; }
+    .status-partiallyshipped { background: #ffe9d0; color: #b35200; }
+
+    /* Campaigns + Profitability tabs */
+    #cogs-view {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      overflow-y: auto;
+      background: #fafafa;
+    }
+    #cogs-view.visible { display: flex; }
+    #cogs-toolbar {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 20px; border-bottom: 1px solid #e5e5e5;
+      background: #fff; flex-wrap: wrap;
+    }
+    #cogs-toolbar h2 { margin: 0; font-size: 18px; color: #1a1a2e; }
+    #cogs-toolbar input, #cogs-toolbar button {
+      padding: 6px 10px; font-size: 13px;
+      border: 1px solid #d0d0d0; border-radius: 4px;
+      background: #fff; color: #1a1a2e;
+    }
+    #cogs-toolbar button {
+      background: #4a6cf7; color: #fff; border-color: #4a6cf7; cursor: pointer;
+    }
+    #cogs-toolbar button:hover { background: #3a5bd6; }
+    #cogs-table-wrap { padding: 12px 20px; }
+    #cogs-body input {
+      padding: 4px 6px; font-size: 13px; border: 1px solid transparent;
+      background: transparent; text-align: right; width: 100px;
+      border-radius: 3px;
+    }
+    #cogs-body input:hover, #cogs-body input:focus {
+      border-color: #d0d0d0; background: #fff; outline: none;
+    }
+    #cogs-body .cogs-delete {
+      padding: 3px 8px; font-size: 12px;
+      background: transparent; color: #b71c1c; border: 1px solid #eee;
+      border-radius: 3px; cursor: pointer;
+    }
+    #cogs-body .cogs-delete:hover { background: #fee; border-color: #b71c1c; }
+    #campaigns-view, #profit-view {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 24px;
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+    #campaigns-view.visible, #profit-view.visible { display: flex; }
+    #campaigns-toolbar, #profit-toolbar {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    #campaigns-toolbar h2, #profit-toolbar h2 {
+      font-size: 18px;
+      color: #1a1a2e;
+      margin-right: auto;
+      align-self: center;
+    }
+    #profit-toolbar label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    #profit-toolbar input {
+      padding: 7px 10px;
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      font-size: 13px;
+      width: 90px;
+    }
+    #campaigns-toolbar button, #profit-toolbar button {
+      padding: 8px 16px;
+      background: #1a1a2e;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    #campaigns-toolbar button:disabled, #profit-toolbar button:disabled { opacity: 0.6; cursor: not-allowed; }
+    #profit-stamp { font-size: 12px; color: #888; align-self: center; }
+
+    #campaigns-kpis, #profit-kpis {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .kpi-card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .kpi-card .label {
+      font-size: 11px;
+      color: #777;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .kpi-card .value {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a1a2e;
+      margin-top: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+    #campaigns-recs, #profit-caveats {
+      background: #fff7e0;
+      border: 1px solid #ffe1a1;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #6e4d00;
+      display: none;
+    }
+    #campaigns-recs.visible, #profit-caveats.visible { display: block; }
+    #campaigns-recs ul, #profit-caveats ul { margin: 4px 0 0 18px; }
+
+    #campaigns-table-wrap, #profit-table-wrap {
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid #e0e0e0;
+      overflow: auto;
+      max-height: calc(100vh - 360px);
+    }
+    #campaigns-table-wrap thead th,
+    #profit-table-wrap thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    #profit-table-wrap tfoot td {
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 13px 14px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      border-top: 2px solid #cbd5e1;
+      position: sticky;
+      bottom: 0;
+      z-index: 2;
+      box-shadow: 0 -2px 8px rgba(15, 23, 42, 0.06);
+    }
+    table.restock.profit tbody td { color: #0f172a; }
+    table.restock.profit a.profit-price-link {
+      color: inherit;
+      text-decoration: none;
+      font-weight: inherit;
+    }
+    table.restock.profit a.profit-price-link:hover {
+      text-decoration: underline;
+    }
+    table.restock.profit tbody td.num {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .profit-cogs-cell { cursor: pointer; }
+    .profit-cogs-cell:not(.editing):hover {
+      background: #eef2ff;
+      outline: 1px dashed #93c5fd;
+    }
+    .profit-cogs-cell.editing { background: #fff8e1; }
+    /* Ads column: Amazon's Ads API doesn't expose per-SKU spend, so we
+       don't fake per-row attribution. Total lives on the top KPI tile.
+       Cells stack a small "BLENDED" tag vertically so the column reads
+       as intentionally not-per-SKU rather than empty. */
+    .profit-ads-blended {
+      color: #94a3b8;
+      font-size: 10px;
+      letter-spacing: 2px;
+      font-weight: 600;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      display: inline-block;
+      padding: 4px 0;
+    }
+    #profit-table-wrap tfoot .profit-totals-label {
+      font-weight: 700;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 11px;
+    }
+    .margin-good { color: #1b5e20; }
+    .margin-warn { color: #b35200; }
+    .margin-bad  { color: #b71c1c; }
+    .profit-warning { color: #b45309; font-weight: 500; }
+    body.embedded-in-aurora .profit-warning { color: #fcd34d; }
+    #campaigns-empty, #profit-empty {
+      padding: 32px;
+      text-align: center;
+      color: #888;
+      background: #fff;
+      border: 1px dashed #d0d0d0;
+      border-radius: 10px;
+    }
+
+    #restock-empty {
+      padding: 40px 24px;
+      text-align: center;
+      color: #64748b;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    #restock-empty strong { color: #0f172a; }
+
+    /* ── Actions button + Product Settings modal ─────────────────── */
+    table.restock .actions-cell { text-align: center; padding: 4px; }
+    .actions-btn {
+      background: transparent;
+      border: 1px solid #e0e4ea;
+      border-radius: 6px;
+      width: 30px; height: 26px;
+      font-size: 18px; line-height: 1;
+      color: #64748b;
+      cursor: pointer;
+    }
+    .actions-btn:hover { background: #eef4ff; color: #1e293b; border-color: #93c5fd; }
+    table.restock .comment-cell { max-width: 160px; color: #475569; }
+
+    #settings-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      display: none; z-index: 950;
+    }
+    #settings-modal-overlay.visible { display: flex; align-items: center; justify-content: center; }
+    #settings-modal {
+      background: #fff;
+      width: 780px; max-width: 92vw; max-height: 88vh;
+      border-radius: 8px;
+      box-shadow: 0 24px 48px rgba(0,0,0,0.24);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    #settings-modal header {
+      background: #3b82f6;
+      color: #fff;
+      padding: 14px 20px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    #settings-modal header h3 { margin: 0; font-size: 17px; font-weight: 600; }
+    #settings-modal header button {
+      background: transparent; border: none; color: #fff;
+      font-size: 22px; cursor: pointer;
+    }
+    #settings-tabs {
+      display: flex; border-bottom: 1px solid #e5e7eb;
+      padding: 0 20px;
+    }
+    #settings-tabs button {
+      background: transparent; border: none;
+      padding: 12px 16px;
+      color: #64748b; font-size: 14px; cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    #settings-tabs button.active {
+      color: #3b82f6; border-bottom-color: #3b82f6; font-weight: 600;
+    }
+    #settings-body {
+      flex: 1; overflow-y: auto;
+      padding: 20px 24px;
+    }
+    #settings-body .settings-row {
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      gap: 16px;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    #settings-body .settings-row:last-child { border-bottom: none; }
+    #settings-body .settings-row label { color: #334155; font-size: 14px; }
+    #settings-body .settings-row input[type="number"],
+    #settings-body .settings-row input[type="text"],
+    #settings-body .settings-row select,
+    #settings-body .settings-row textarea {
+      width: 100%; padding: 8px 10px;
+      border: 1px solid #cbd5e1; border-radius: 6px;
+      font-size: 14px;
+    }
+    #settings-body .settings-row input[type="checkbox"] { transform: scale(1.15); }
+    #settings-body .velocity-table {
+      width: 100%; border-collapse: collapse;
+      margin-top: 8px;
+    }
+    #settings-body .velocity-table th, #settings-body .velocity-table td {
+      padding: 8px 10px; text-align: left;
+      border-bottom: 1px solid #f1f5f9; font-size: 13px;
+    }
+    #settings-body .velocity-table th { color: #64748b; font-weight: 500; }
+    #settings-body .velocity-table tbody tr:nth-child(even) { background: #f8fafc; }
+    #settings-body .velocity-table input {
+      width: 80px; padding: 5px 8px;
+      border: 1px solid #cbd5e1; border-radius: 6px;
+      font-size: 13px;
+    }
+    #settings-body .weighted-summary {
+      margin-top: 12px; padding: 10px 12px;
+      background: #eff6ff; border-radius: 6px;
+      color: #1e40af; font-size: 13px;
+    }
+    #settings-body .weighted-summary strong { font-size: 15px; }
+    #settings-footer {
+      display: flex; justify-content: flex-end; gap: 10px;
+      padding: 12px 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+    #settings-footer button {
+      padding: 8px 20px; border-radius: 6px;
+      font-size: 14px; cursor: pointer;
+      border: 1px solid #cbd5e1; background: #fff; color: #334155;
+    }
+    #settings-footer button.primary {
+      background: #3b82f6; color: #fff; border-color: #3b82f6;
+    }
+    #settings-footer button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    #settings-body h4 {
+      margin: 0 0 12px 0; font-size: 14px; color: #334155;
+    }
+    #settings-body .field-hint {
+      font-size: 12px; color: #94a3b8; margin-top: 4px;
+    }
+
+    /* SKU drill-down side panel */
+    #sku-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 520px;
+      max-width: 90vw;
+      background: #fff;
+      box-shadow: -8px 0 24px rgba(0,0,0,0.12);
+      transform: translateX(100%);
+      transition: transform 0.22s ease;
+      display: flex;
+      flex-direction: column;
+      z-index: 900;
+    }
+    #sku-drawer.visible { transform: translateX(0); }
+    #sku-drawer header {
+      background: #1a1a2e;
+      color: #fff;
+      padding: 14px 18px;
+      font-size: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #sku-drawer .close-btn {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 22px;
+      cursor: pointer;
+    }
+    #sku-drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px;
+      font-size: 13px;
+      color: #333;
+    }
+    #sku-drawer-body .kv {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 16px;
+      margin-bottom: 16px;
+    }
+    #sku-drawer-body .kv div span:first-child {
+      display: block;
+      font-size: 11px;
+      color: #777;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    #sku-drawer-body .kv div span:last-child {
+      font-size: 14px;
+      color: #1a1a2e;
+      font-weight: 600;
+    }
+    #sku-chart-wrap { position: relative; height: 260px; }
+    .sku-shipments {
+      grid-column: 1 / -1;
+      margin-top: 12px;
+      border-top: 1px solid #eee;
+      padding-top: 12px;
+    }
+    .sku-shipments-title {
+      font-size: 11px; color: #777; text-transform: uppercase;
+      letter-spacing: 0.5px; margin-bottom: 8px;
+    }
+    .sku-shipments table {
+      width: 100%; border-collapse: collapse; font-size: 12px;
+    }
+    .sku-shipments th, .sku-shipments td {
+      text-align: left; padding: 6px 8px; border-bottom: 1px solid #f0f0f0;
+    }
+    .sku-shipments th {
+      font-weight: 600; color: #555; background: #fafafa;
+    }
+    .sku-shipments td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .sku-shipments-empty {
+      grid-column: 1 / -1;
+      margin-top: 12px;
+      padding: 10px; background: #fafafa; border-radius: 4px;
+      color: #777; font-style: italic; font-size: 12px;
+    }
+    .mode-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 10px;
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .mode-air { background: #e3f2fd; color: #1565c0; }
+    .mode-ocean { background: #e0f7fa; color: #00695c; }
+    .mode-ground { background: #f1f0f5; color: #555; }
+    .next-arrival {
+      display: inline-flex; align-items: baseline; gap: 6px;
+      font-size: 12px; color: #1a1a2e;
+      background: #eef4ff; padding: 3px 8px; border-radius: 6px;
+      white-space: nowrap;
+    }
+    .next-arrival strong { color: #1a1a2e; font-weight: 700; }
+    .next-arrival-more {
+      font-size: 10px; color: #6b7bbf; font-weight: 500;
+    }
+    .next-arrival-none { color: #bbb; }
+    #sku-drawer-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.25);
+      display: none; z-index: 800;
+    }
+    #sku-drawer-overlay.visible { display: block; }
+
+    /* ── Embedded in Aurora dashboard (must be last) ───── */
+    body.embedded-in-aurora {
+      height: 100%;
+      min-height: 100%;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    body.embedded-in-aurora #sidebar {
+      width: 240px;
+      background: #0b1220;
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    body.embedded-in-aurora #sidebar-header { padding: 12px; }
+    body.embedded-in-aurora #new-chat-btn {
+      background: rgba(30, 139, 255, 0.16);
+      border-color: rgba(30, 139, 255, 0.35);
+      color: #dbeafe;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    body.embedded-in-aurora #new-chat-btn:hover { background: rgba(30, 139, 255, 0.28); }
+    body.embedded-in-aurora .session-item { border-radius: 10px; color: #cbd5e1; }
+    body.embedded-in-aurora .session-item:hover,
+    body.embedded-in-aurora .session-item.active {
+      background: rgba(30, 139, 255, 0.14);
+      color: #fff;
+    }
+    body.embedded-in-aurora #cogs-panel,
+    body.embedded-in-aurora #sidebar-footer,
+    body.embedded-in-aurora #main > header {
+      display: none !important;
+    }
+    body.embedded-in-aurora #main { background: #0f172a; }
+    body.embedded-in-aurora #tab-nav {
+      background: #111827;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      gap: 4px;
+      padding: 8px 12px 0;
+      overflow-x: auto;
+    }
+    body.embedded-in-aurora .tab-btn {
+      background: transparent !important;
+      color: #94a3b8 !important;
+      border: none !important;
+      border-bottom: 2px solid transparent !important;
+      border-radius: 8px 8px 0 0;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    body.embedded-in-aurora .tab-btn:hover {
+      color: #e2e8f0 !important;
+      background: rgba(255, 255, 255, 0.04) !important;
+    }
+    body.embedded-in-aurora .tab-btn.active {
+      color: #93c5fd !important;
+      border-bottom-color: #1e8bff !important;
+      background: rgba(30, 139, 255, 0.1) !important;
+    }
+    body.embedded-in-aurora #chat-container,
+    body.embedded-in-aurora #restock-view,
+    body.embedded-in-aurora #orders-view,
+    body.embedded-in-aurora #campaigns-view,
+    body.embedded-in-aurora #profit-view,
+    body.embedded-in-aurora #cogs-view {
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    body.embedded-in-aurora .welcome { color: #94a3b8; margin-top: 48px; }
+    body.embedded-in-aurora .welcome h2 { color: #f8fafc !important; font-size: 1.35rem; }
+    body.embedded-in-aurora .message.user {
+      background: linear-gradient(135deg, #1e8bff, #2563eb);
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+    }
+    body.embedded-in-aurora .message.assistant {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: none;
+    }
+    body.embedded-in-aurora .message.assistant.streaming { border-left: 3px solid #1e8bff; }
+    body.embedded-in-aurora .tool-result-card {
+      background: #111827;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-left: 4px solid #1e8bff;
+      color: #cbd5e1;
+    }
+    body.embedded-in-aurora .tool-result-header { color: #93c5fd; }
+    body.embedded-in-aurora .tool-result-body { color: #cbd5e1; }
+    body.embedded-in-aurora .tool-indicator { color: #93c5fd; }
+    body.embedded-in-aurora #input-area {
+      background: #111827;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 14px 18px;
+    }
+    body.embedded-in-aurora #message-input {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #f8fafc;
+      border-radius: 12px;
+    }
+    body.embedded-in-aurora #message-input::placeholder { color: #64748b; }
+    body.embedded-in-aurora #message-input:focus {
+      border-color: #1e8bff;
+      box-shadow: 0 0 0 3px rgba(30, 139, 255, 0.18);
+    }
+    body.embedded-in-aurora #send-btn {
+      background: #1e8bff;
+      border-radius: 12px;
+      padding: 12px 20px;
+    }
+    body.embedded-in-aurora #send-btn:hover { background: #1570d4; }
+    body.embedded-in-aurora #send-btn:disabled { background: #334155; color: #94a3b8; }
+
+    /* Data tabs — dark cards so table text stays readable in Aurora embed */
+    body.embedded-in-aurora #restock-table-wrap,
+    body.embedded-in-aurora #orders-table-wrap,
+    body.embedded-in-aurora #campaigns-table-wrap,
+    body.embedded-in-aurora #profit-table-wrap {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    }
+    body.embedded-in-aurora table.restock thead th {
+      background: #0f172a;
+      color: #94a3b8;
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+    body.embedded-in-aurora table.restock tbody tr {
+      border-bottom-color: rgba(255, 255, 255, 0.06);
+    }
+    body.embedded-in-aurora table.restock tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.02); }
+    body.embedded-in-aurora table.restock tbody tr:hover { background: rgba(30, 139, 255, 0.1); }
+    body.embedded-in-aurora table.restock td {
+      color: #f1f5f9;
+      border-color: rgba(255, 255, 255, 0.06);
+    }
+    body.embedded-in-aurora table.restock td.sku-cell {
+      border-right-color: rgba(255, 255, 255, 0.08);
+      background: #1e293b;
+    }
+    body.embedded-in-aurora table.restock tbody tr:nth-child(even) td.sku-cell { background: #1a2332; }
+    body.embedded-in-aurora table.restock tbody tr:hover td.sku-cell { background: #1e3a5f; }
+    body.embedded-in-aurora table.restock .sku-name { color: #f8fafc; }
+    body.embedded-in-aurora table.restock .num { color: #e2e8f0; }
+    body.embedded-in-aurora table.restock .num-strong { color: #93c5fd; }
+    body.embedded-in-aurora table.restock .date-cell { color: #cbd5e1; }
+    body.embedded-in-aurora table.restock .next-arrival { color: #cbd5e1; }
+    body.embedded-in-aurora table.restock .next-arrival strong { color: #f8fafc; }
+    body.embedded-in-aurora table.restock .next-arrival-none { color: #64748b; }
+    body.embedded-in-aurora .urgency-red    { background: rgba(239, 68, 68, 0.18); color: #fca5a5; border-color: rgba(239, 68, 68, 0.35); }
+    body.embedded-in-aurora .urgency-orange { background: rgba(249, 115, 22, 0.18); color: #fdba74; border-color: rgba(249, 115, 22, 0.35); }
+    body.embedded-in-aurora .urgency-amber  { background: rgba(234, 179, 8, 0.18); color: #fde047; border-color: rgba(234, 179, 8, 0.35); }
+    body.embedded-in-aurora .urgency-green  { background: rgba(34, 197, 94, 0.18); color: #86efac; border-color: rgba(34, 197, 94, 0.35); }
+    body.embedded-in-aurora .urgency-grey   { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border-color: rgba(148, 163, 184, 0.3); }
+
+    body.embedded-in-aurora #profit-table-wrap tfoot td {
+      background: #0f172a;
+      color: #f8fafc;
+      border-top: 2px solid rgba(30, 139, 255, 0.4);
+      box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.35);
+    }
+    body.embedded-in-aurora #profit-table-wrap tfoot .profit-totals-label {
+      color: #93c5fd;
+    }
+    body.embedded-in-aurora #profit-table-wrap tfoot .num { color: #f1f5f9; }
+    body.embedded-in-aurora table.restock.profit tbody td { color: #f1f5f9; }
+    body.embedded-in-aurora table.restock.profit a.profit-price-link {
+      color: #f1f5f9;
+    }
+    body.embedded-in-aurora .margin-good { color: #86efac !important; }
+    body.embedded-in-aurora .margin-warn { color: #fdba74 !important; }
+    body.embedded-in-aurora .margin-bad  { color: #fca5a5 !important; }
+    body.embedded-in-aurora .kpi-card {
+      background: #1e293b;
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+    body.embedded-in-aurora .kpi-card .label { color: #94a3b8; }
+    body.embedded-in-aurora .kpi-card .value { color: #f8fafc; }
+    body.embedded-in-aurora #profit-caveats,
+    body.embedded-in-aurora #campaigns-recs {
+      background: rgba(234, 179, 8, 0.1);
+      border-color: rgba(234, 179, 8, 0.35);
+      color: #fde68a;
+    }
+    body.embedded-in-aurora #profit-caveats strong { color: #fef3c7; }
+    body.embedded-in-aurora #profit-caveats code {
+      background: rgba(0, 0, 0, 0.25);
+      color: #fef3c7;
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+
+    body.embedded-in-aurora #restock-toolbar h2,
+    body.embedded-in-aurora #orders-toolbar h2,
+    body.embedded-in-aurora #campaigns-toolbar h2,
+    body.embedded-in-aurora #profit-toolbar h2 { color: #f8fafc; }
+    body.embedded-in-aurora #restock-stamp,
+    body.embedded-in-aurora #orders-stamp,
+    body.embedded-in-aurora #campaigns-stamp,
+    body.embedded-in-aurora #profit-stamp { color: #94a3b8; }
+    body.embedded-in-aurora #restock-count {
+      background: rgba(30, 139, 255, 0.15);
+      color: #93c5fd;
+      border: 1px solid rgba(30, 139, 255, 0.25);
+    }
+    body.embedded-in-aurora #restock-show-no-demand-label { color: #cbd5e1; }
+    body.embedded-in-aurora #restock-toolbar button,
+    body.embedded-in-aurora #orders-toolbar #orders-refresh,
+    body.embedded-in-aurora #campaigns-refresh,
+    body.embedded-in-aurora #profit-refresh {
+      background: #1e8bff;
+      color: #fff;
+      border: none;
+    }
+    body.embedded-in-aurora #restock-toolbar button.secondary {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    body.embedded-in-aurora #restock-settings {
+      background: #1e293b;
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #e2e8f0;
+    }
+    body.embedded-in-aurora #restock-settings label { color: #94a3b8; }
+    body.embedded-in-aurora #restock-settings input {
+      background: #0f172a;
+      border-color: rgba(255, 255, 255, 0.12);
+      color: #f8fafc;
+    }
+    body.embedded-in-aurora #restock-empty,
+    body.embedded-in-aurora #orders-empty,
+    body.embedded-in-aurora #campaigns-empty,
+    body.embedded-in-aurora #profit-empty {
+      background: #1e293b;
+      border-color: rgba(255, 255, 255, 0.12);
+      color: #94a3b8;
+    }
+    body.embedded-in-aurora #restock-empty strong { color: #e2e8f0; }
+    body.embedded-in-aurora .restock-loading {
+      background: rgba(30, 139, 255, 0.12);
+      border-color: rgba(30, 139, 255, 0.35);
+      color: #93c5fd;
+    }
+    body.embedded-in-aurora .restock-loading-spinner {
+      border-color: rgba(147, 197, 253, 0.35);
+      border-top-color: #93c5fd;
+    }
+    body.embedded-in-aurora #sku-drawer {
+      background: #1e293b;
+      box-shadow: -12px 0 40px rgba(0, 0, 0, 0.5);
+    }
+    body.embedded-in-aurora #sku-drawer .drawer-body {
+      background: #1e293b;
+      color: #e2e8f0;
+    }
+    body.embedded-in-aurora #orders-toolbar label,
+    body.embedded-in-aurora #profit-toolbar label {
+      color: #94a3b8;
+    }
+    body.embedded-in-aurora #orders-toolbar select,
+    body.embedded-in-aurora #orders-toolbar input,
+    body.embedded-in-aurora #profit-toolbar input {
+      background: #1e293b;
+      border-color: rgba(255, 255, 255, 0.12);
+      color: #f8fafc;
+    }
+
+    /* ── Keyword Matrix view ────────────────────────────── */
+    #keywords-view {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      overflow-y: auto;
+      background: #fafafa;
+    }
+    #keywords-view.visible { display: flex; }
+    #keywords-toolbar {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 20px; border-bottom: 1px solid #e5e5e5;
+      background: #fff; flex-wrap: wrap;
+    }
+    #keywords-toolbar h2 { margin: 0; font-size: 18px; color: #1a1a2e; }
+    #keywords-toolbar input {
+      padding: 6px 10px; font-size: 13px;
+      border: 1px solid #d0d0d0; border-radius: 4px;
+      background: #fff; color: #1a1a2e;
+    }
+    #kw-asins { min-width: 320px; flex: 1; max-width: 600px; }
+    #kw-adgroup { width: 160px; }
+    #kw-run-btn {
+      padding: 6px 14px; font-size: 13px;
+      background: #4a6cf7; color: #fff; border: none;
+      border-radius: 4px; cursor: pointer;
+    }
+    #kw-run-btn:hover { background: #3a5bd6; }
+    #kw-run-btn:disabled { background: #a0a8bd; cursor: not-allowed; }
+    #kw-status { font-size: 12px; color: #666; }
+
+    #kw-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* Stepper */
+    #kw-stepper {
+      display: flex; gap: 4px; align-items: center;
+      font-size: 12px; color: #666;
+    }
+    .kw-step {
+      padding: 4px 10px; border-radius: 12px;
+      background: #eee; color: #888;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .kw-step.active { background: #4a6cf7; color: #fff; }
+    .kw-step.done { background: #22c55e; color: #fff; }
+    .kw-step-arrow { color: #ccc; }
+
+    /* Per-source summary strip */
+    #kw-source-strip {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    }
+    .kw-source-card {
+      background: #fff; border: 1px solid #e5e5e5; border-radius: 6px;
+      padding: 10px 12px; font-size: 12px;
+    }
+    .kw-source-card h4 {
+      margin: 0 0 4px; font-size: 13px; color: #1a1a2e;
+    }
+    .kw-source-card .kw-note {
+      color: #b71c1c; font-size: 11px; margin-top: 2px;
+    }
+
+    /* Matrix */
+    #kw-matrix {
+      background: #fff; border: 1px solid #e5e5e5; border-radius: 6px;
+      overflow: hidden;
+    }
+    #kw-matrix table { width: 100%; border-collapse: collapse; }
+    #kw-matrix th, #kw-matrix td {
+      padding: 10px 12px; vertical-align: top;
+      border-right: 1px solid #eee; border-bottom: 1px solid #eee;
+      text-align: left; font-size: 12px;
+    }
+    #kw-matrix th {
+      background: #f4f6fb; color: #1a1a2e; font-weight: 600;
+    }
+    #kw-matrix th.kw-tier {
+      background: #fff; width: 80px; text-align: center;
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    #kw-matrix th.kw-tier.tier-top { color: #22c55e; }
+    #kw-matrix th.kw-tier.tier-medium { color: #eab308; }
+    #kw-matrix th.kw-tier.tier-low { color: #b71c1c; }
+    #kw-matrix td { width: calc((100% - 80px) / 3); }
+    .kw-cell-item {
+      padding: 6px 0; border-bottom: 1px dashed #f0f0f0;
+    }
+    .kw-cell-item:last-child { border-bottom: none; }
+    .kw-cell-kw {
+      font-weight: 600; color: #1a1a2e; font-size: 13px;
+    }
+    .kw-cell-metrics {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      font-size: 11px; color: #666; margin-top: 2px;
+    }
+    .kw-cell-metrics span b { color: #1a1a2e; font-weight: 600; }
+    .kw-cell-empty { color: #aaa; font-style: italic; font-size: 12px; }
+    #kw-error {
+      background: #fee; color: #b71c1c; padding: 8px 12px;
+      border-radius: 4px; font-size: 13px; display: none;
+    }
+
+    /* Global dark mode — invert the whole page, then counter-invert
+       raster/vector assets so photos and icons still read normally. The
+       hue-rotate keeps accent colors close to their intended hue. */
+    html {
+      background: #0f172a;
+      filter: invert(0.92) hue-rotate(180deg);
+    }
+    img, video, svg, canvas, iframe, .no-dark-invert {
+      filter: invert(1) hue-rotate(180deg);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Login overlay -->
+  <div id="login-overlay">
+    <form id="login-card">
+      <h2>Sign in</h2>
+      <p>Use your Aurora email and password.</p>
+      <label for="login-email">Email</label>
+      <input id="login-email" type="email" autocomplete="username" required>
+      <label for="login-password">Password</label>
+      <input id="login-password" type="password" autocomplete="current-password" required>
+      <button id="login-submit" type="submit">Sign in</button>
+      <div id="login-error"></div>
+    </form>
+  </div>
+
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <button id="new-chat-btn">+ New Chat</button>
+    </div>
+    <div id="session-list"></div>
+
+    <div id="cogs-panel">
+      <h4>COGS</h4>
+      <a href="/cogs_template.csv" download>Download template</a>
+      <button id="cogs-upload-btn">Upload CSV file</button>
+      <input type="file" id="cogs-file" accept=".csv,text/csv,text/plain">
+      <textarea id="cogs-paste" placeholder="…or paste CSV here:&#10;sku,unit_cost,inbound_shipping_per_unit&#10;ABC-1,3.20,0.45"></textarea>
+      <button id="cogs-paste-btn">Save pasted CSV</button>
+      <div id="cogs-status"></div>
+    </div>
+
+    <div id="sidebar-footer">
+      <span id="user-email"></span>
+      <button id="logout-btn">Log out</button>
+    </div>
+  </div>
+
+  <!-- Main chat area -->
+  <div id="main">
+    <header>
+      <span>&#128202;</span> Aurora AI Assistant
+    </header>
+
+    <nav id="tab-nav">
+      <button class="tab-btn active" data-tab="chat">Chat</button>
+      <button class="tab-btn" data-tab="restock">Restock</button>
+      <button class="tab-btn" data-tab="orders">Orders</button>
+      <button class="tab-btn" data-tab="campaigns">Campaigns</button>
+      <button class="tab-btn" data-tab="profit">Profitability</button>
+      <button class="tab-btn" data-tab="cogs">COGS</button>
+      <button class="tab-btn" data-tab="keywords">Keywords</button>
+    </nav>
+
+    <div id="chat-container">
+      <div class="welcome">
+        <h2>Campaign Analyst Assistant</h2>
+        Ask me anything about your advertising campaigns.<br>
+        Try: "How many campaigns are active?" or "Which campaign has the highest budget?"
+      </div>
+    </div>
+
+    <div id="input-area">
+      <input type="text" id="message-input" placeholder="Ask about your campaigns..." autocomplete="off">
+      <button id="send-btn">Send</button>
+    </div>
+
+    <div id="restock-view">
+      <div id="restock-toolbar">
+        <h2>Restock dashboard</h2>
+        <span id="restock-count"></span>
+        <span id="restock-stamp"></span>
+        <label id="restock-show-no-demand-label" title="Include SKUs with no recent demand and no PO suggestion">
+          <input type="checkbox" id="restock-show-no-demand"> Show no-demand SKUs
+        </label>
+        <label id="restock-hide-non-buyable-label" title="Hide SKUs Amazon has flagged as not buyable (blocked / suppressed listings)">
+          <input type="checkbox" id="restock-hide-non-buyable"> Hide non-buyable
+        </label>
+        <input type="text" id="restock-search" placeholder="Filter by SKU or ASIN" style="min-width:180px;padding:4px 8px;font-size:12px;border:1px solid #cbd5e1;border-radius:4px;">
+        <label title="Trailing window for the Orders column (units sold, Aurora orders, cancelled/pending excluded)" style="font-size:12px;">
+          Orders window
+          <select id="restock-orders-window" style="margin-left:4px;padding:4px 6px;font-size:12px;border:1px solid #cbd5e1;border-radius:4px;">
+            <option value="7">7 days</option>
+            <option value="30" selected>30 days</option>
+            <option value="60">60 days</option>
+          </select>
+        </label>
+
+        <!--
+        <label title="Trailing window used to compute the Orders/day column (Aurora sales, out-of-stock days excluded)">
+          Velocity window
+          <select id="restock-velocity-window">
+            <option value="3">3 days</option>
+            <option value="7">7 days</option>
+            <option value="30" selected>30 days</option>
+            <option value="90">90 days</option>
+          </select>
+        </label>
+        -->
+
+        <button id="restock-settings-toggle" class="secondary">Settings</button>
+        <button id="restock-refresh">Refresh forecasts</button>
+      </div>
+
+      <div id="restock-settings">
+        <label>Target cover (days)
+          <input id="setting-target-cover" type="number" min="7" max="365">
+        </label>
+        <label title="Days from your origin to the Amazon FC once an air shipment dispatches — feeds Ship by (Air).">Air transit (days)
+          <input id="setting-air-transit" type="number" min="1" max="365">
+        </label>
+        <label title="Days from your origin to the Amazon FC once an ocean shipment dispatches — feeds Ship by (Ocean).">Ocean transit (days)
+          <input id="setting-ocean-transit" type="number" min="1" max="365">
+        </label>
+        <button id="setting-save">Save</button>
+      </div>
+
+      <div id="restock-loading" class="restock-loading" aria-live="polite">
+        <span class="restock-loading-spinner" aria-hidden="true"></span>
+        <span id="restock-loading-text">Loading sales history and fitting forecasts…</span>
+      </div>
+
+      <div id="restock-table-wrap">
+        <table class="restock">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th title="Amazon Standard Identification Number">ASIN</th>
+              <th title="Fulfillment Network SKU — Amazon's internal barcode ID for FBA units">FNSKU</th>
+              <th class="num" title="Seller Central On-hand (FBA) = Available + FC Transfer (pendingTransshipment). Reserved / Unfulfillable / Inbound are separate columns.">On hand</th>
+              <th class="num" title="Units set aside by Amazon for pending customer orders / FC transfers / processing — not sellable right now">Reserved</th>
+              <th class="num" title="Units Amazon has received into the network but not yet checked into the destination FC (inboundShippedQuantity)">Sent to FBA</th>
+              <th class="num" title="Units on an inbound shipment plan you've created but not yet shipped (inboundWorkingQuantity)">Inbound working</th>
+              <th class="num" title="Damaged or customer-returned units currently unsellable">Unfulfillable</th>
+              <!-- <th class="num" title="Total units still to arrive across all in-flight shipments (unitsExpected − unitsReceived)">Inbound</th> -->
+              <th title="Next inbound shipment's outstanding qty and ETA — proof the projection is factoring in your in-flight stock">Next arrival</th>
+              <th class="num" title="Weighted sales velocity — 0.5×v3d + 0.3×v7d + 0.2×v30d (out-of-stock days excluded)">Orders Velocity</th>
+              <th class="num" title="Average units sold per day over the selected window (units sold ÷ window size; Aurora orders, cancelled/pending excluded)"><span id="restock-orders-header">Orders/day (30d)</span></th>
+              <!-- <th class="num" title="Total units sold in the selected window (Aurora orders, cancelled/pending excluded)"><span id="restock-units-header">Units (30d)</span></th> -->
+              <th class="num">30-day forecast</th>
+              <th>Days of cover</th>
+              <th class="num" title="Amazon's own metric: ratio of avg. daily sellable on-hand inventory to avg. daily shipped units (max of 30d and 90d ratios). Low-inventory-level fee doesn't apply when HDOS > 28. Source: FBA Inventory Planning report.">Historical DoS</th>
+              <th title="Projected stockout date given on-hand + inbound shipments − daily demand">Stockout on</th>
+              <th title="Latest date to dispatch a shipment via air freight (~10d transit to Amazon FC)">Ship by (Air)</th>
+              <th title="Latest date to dispatch a shipment via ocean freight (~45d transit to Amazon FC)">Ship by (Ocean)</th>
+              <th class="num" title="Days until you need to dispatch by air (delta from today to Ship by Air). Negative = you're late.">Days until next order</th>
+              <th class="num">Suggested qty</th>
+              <!-- Amz rec qty temporarily hidden — Restock Recommendations report column names need normalization before values will fill. Uncomment once the fix ships.
+              <th class="num" title="Amazon's own recommended restock quantity from the Restock Recommendations report. Compare against our Suggested qty for a sanity check.">Amz rec qty</th>
+              -->
+              <th class="num" title="Units on your open purchase orders that haven't arrived at your warehouse / prep center yet">Ordered</th>
+              <th class="num" title="(Available to sell + Reserved + Sent to FBA + Inbound working) × landed cost from your COGS">Stock value</th>
+              <th class="num" title="Rough estimate of profit lost during stockout days over the last 90d, using ~25% margin on landed cost">Missed profit (est.)</th>
+              <th title="Free-text notes for this SKU (set via the Actions menu)">Comment</th>
+              <th title="Per-SKU manufacturing / forecast / packing / supplier settings">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="restock-body"></tbody>
+        </table>
+      </div>
+      <div id="restock-empty" style="display:none;">
+        No forecasts yet. Click <strong>Refresh forecasts</strong> to load sales history from Aurora
+        (or Amazon if not synced yet) and generate restock recommendations.
+        <span id="restock-empty-hint"></span>
+      </div>
+    </div>
+
+    <div id="orders-view">
+      <div id="orders-toolbar">
+        <h2>Orders</h2>
+        <span id="orders-stamp"></span>
+        <label>Marketplace
+          <select id="orders-marketplace"><option value="">All</option></select>
+        </label>
+        <label>Days back
+          <input id="orders-days" type="number" min="1" max="365" value="30">
+        </label>
+        <label>Status
+          <select id="orders-status">
+            <option value="">Any</option>
+            <option value="Pending">Pending</option>
+            <option value="Unshipped">Unshipped</option>
+            <option value="PartiallyShipped">PartiallyShipped</option>
+            <option value="Shipped">Shipped</option>
+            <option value="Canceled">Canceled</option>
+            <option value="Unfulfillable">Unfulfillable</option>
+            <option value="InvoiceUnconfirmed">InvoiceUnconfirmed</option>
+          </select>
+        </label>
+        <label>Buyer email
+          <input id="orders-buyer" type="search" placeholder="contains…">
+        </label>
+        <button id="orders-refresh">Apply</button>
+      </div>
+
+      <div id="orders-table-wrap">
+        <table class="restock orders">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Purchased</th>
+              <th>Status</th>
+              <th>Marketplace</th>
+              <th class="num">Items</th>
+              <th class="num">Total</th>
+              <th>Ship-by</th>
+            </tr>
+          </thead>
+          <tbody id="orders-body"></tbody>
+        </table>
+      </div>
+      <div id="orders-empty" style="display:none;">
+        No orders in this window. Widen the date range or change filters.
+      </div>
+    </div>
+
+    <div id="campaigns-view">
+      <div id="campaigns-toolbar">
+        <h2>Campaign performance</h2>
+        <button id="campaigns-refresh">Refresh</button>
+      </div>
+      <div id="campaigns-kpis"></div>
+      <div id="campaigns-recs"></div>
+      <div id="campaigns-table-wrap">
+        <table class="restock campaigns">
+          <thead>
+            <tr>
+              <th>Campaign</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Country</th>
+              <th class="num">Spend</th>
+              <th class="num">Sales</th>
+              <th class="num">Budget</th>
+              <th class="num">ACOS %</th>
+              <th class="num">ROI %</th>
+            </tr>
+          </thead>
+          <tbody id="campaigns-body"></tbody>
+        </table>
+      </div>
+      <div id="campaigns-empty" style="display:none;">
+        No campaign data yet. Make sure Amazon Ads is connected.
+      </div>
+    </div>
+
+    <div id="profit-view">
+      <div id="profit-toolbar">
+        <h2>Profitability</h2>
+        <span id="profit-stamp"></span>
+        <label>From
+          <input id="profit-start" type="date">
+        </label>
+        <label>To
+          <input id="profit-end" type="date">
+        </label>
+        <button id="profit-refresh">Apply</button>
+        <input type="text" id="profit-search" placeholder="Filter by SKU or ASIN" style="min-width:180px;padding:4px 8px;font-size:12px;border:1px solid #cbd5e1;border-radius:4px;">
+      </div>
+      <div id="profit-kpis"></div>
+      <div id="profit-caveats"></div>
+      <div id="profit-table-wrap" style="overflow-x:auto;">
+        <table class="restock profit">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th title="Amazon Standard Identification Number">ASIN</th>
+              <th class="num">Units</th>
+              <th class="num" title="Revenue ÷ units">Avg Price</th>
+              <th class="num">Revenue</th>
+              <th class="num" title="Selling Price × category referral fee % (Product Fees API)">Referral</th>
+              <th class="num" title="Base FBA fulfillment fee × units — from the same products.fees as the Products page. Products 'FBA Fee' = this column + Fuel.">FBA</th>
+              <th class="num" title="Fuel & inflation surcharge × units — split from Products FBA Fee so FBA + Fuel matches that column.">Fuel</th>
+              <th class="num" title="Seller Central FBA inbound placement service fees — account total for the selected Event/Transaction date filter. Not allocated by SKU (shown as BLENDED).">Inbound Placement</th>
+              <th class="num" title="Low Inventory Level Fee from Finances API (45-day lookback)">Low Inv</th>
+              <th class="num" title="FBA storage report: monthly fee ÷ avg units on hand × units sold">Storage</th>
+              <th class="num" title="Seller Central Aged Inventory Surcharge report: sum of amount-charged per SKU for months in the window">Aged Inv</th>
+              <th class="num" title="Amazon's Ads API doesn't expose per-SKU spend, so ads are blended across the account. See the account-level total in the top 'Ad spend' KPI tile.">Ads</th>
+              <th class="num" title="Product cost + your inbound shipping to Amazon (from your CSV)">COGS</th>
+              <th class="num" title="20% of referral fee on returned/refunded units (Aurora FBA returns + Finances refunds, same as Returned Orders)">Return Proc</th>
+              <th class="num" title="FBA Removal Order Return/Disposal fees from Payments → Transactions (PostedDate in the selected filter)">Removal</th>
+              <th class="num">Net</th>
+              <th class="num">Margin %</th>
+            </tr>
+          </thead>
+          <tbody id="profit-body"></tbody>
+          <tfoot id="profit-foot"></tfoot>
+        </table>
+      </div>
+      <div id="profit-empty" style="display:none;">
+        No profitable rows yet. Upload COGS for your active SKUs from the sidebar.
+      </div>
+    </div>
+
+    <div id="cogs-view">
+      <div id="cogs-toolbar">
+        <h2>COGS</h2>
+        <span id="cogs-stamp"></span>
+        <form id="cogs-add-form" style="display:flex; gap:6px; align-items:center; margin-left:auto;">
+          <input id="cogs-add-sku"  type="text"   placeholder="SKU"                   required style="min-width:180px;">
+          <input id="cogs-add-cost" type="number" placeholder="Unit cost"     step="0.01" min="0.01" required style="width:110px;">
+          <input id="cogs-add-ship" type="number" placeholder="Inbound ship/unit" step="0.01" min="0" style="width:130px;">
+          <button type="submit">Add / Update</button>
+        </form>
+      </div>
+      <div id="cogs-status" style="margin: 6px 20px; font-size: 13px; color:#666;"></div>
+      <div id="cogs-table-wrap">
+        <table class="restock">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th class="num" title="Product cost per unit (from supplier)">Unit cost ($)</th>
+              <th class="num" title="Your shipping cost per unit to get inventory to Amazon">Inbound ship/unit ($)</th>
+              <th>Updated</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="cogs-body"></tbody>
+        </table>
+      </div>
+      <div id="cogs-empty" style="display:none; padding:20px; color:#888;">
+        No COGS rows yet. Add one above or upload a CSV from the sidebar.
+      </div>
+    </div>
+
+    <div id="keywords-view">
+      <div id="keywords-toolbar">
+        <h2>Keyword Matrix</h2>
+        <input id="kw-asins" type="text" placeholder="ASINs (comma separated) — e.g. B0ABC123, B0DEF456">
+        <input id="kw-campaign" type="text" placeholder="Campaign ID (optional — auto-picked from ASIN)">
+        <input id="kw-adgroup" type="text" placeholder="Ad Group ID (optional — auto-picked from ASIN)">
+        <button id="kw-run-btn">Run</button>
+        <span id="kw-status"></span>
+      </div>
+      <div id="kw-body">
+        <div id="kw-error"></div>
+        <div id="kw-stepper" style="display:none;"></div>
+        <div id="kw-source-strip" style="display:none;"></div>
+        <div id="kw-matrix" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Settings modal (opened by the ⋯ action in each restock row) -->
+  <div id="settings-modal-overlay">
+    <div id="settings-modal">
+      <header>
+        <h3 id="settings-modal-title">Product Settings</h3>
+        <button id="settings-close-btn" title="Close">&times;</button>
+      </header>
+      <div id="settings-tabs">
+        <button class="active" data-tab="mfg">Manufacturing &amp; logistics</button>
+        <button data-tab="forecast">Forecast</button>
+        <button data-tab="shipping">Shipping to FBA</button>
+        <button data-tab="po">Purchase order</button>
+      </div>
+      <div id="settings-body"></div>
+      <div id="settings-footer">
+        <button id="settings-cancel-btn">Cancel</button>
+        <button id="settings-save-btn" class="primary">Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sku-drawer-overlay"></div>
+  <div id="sku-drawer">
+    <header>
+      <span id="sku-drawer-title">SKU detail</span>
+      <button class="close-btn" id="sku-drawer-close">&times;</button>
+    </header>
+    <div id="sku-drawer-body">
+      <div class="kv" id="sku-kv"></div>
+      <div id="sku-chart-wrap"><canvas id="sku-chart"></canvas></div>
+    </div>
+  </div>
+
+  <script>
+    const chatContainer = document.getElementById('chat-container');
+    const messageInput = document.getElementById('message-input');
+    const sendBtn = document.getElementById('send-btn');
+    const sessionListEl = document.getElementById('session-list');
+    const newChatBtn = document.getElementById('new-chat-btn');
+    let isStreaming = false;
+    let currentSessionId = null;
+    let ws = null;
+    let currentAssistantDiv = null;
+
+    // ── Auth ───────────────────────────────────────────
+    // Login is handled by THIS backend's POST /api/auth/login — same origin,
+    // so no CORS. It verifies the password against the shared Mongo users
+    // collection and issues a JWT signed with Aurora's JWT_SECRET, so the
+    // resulting token works against Aurora as well.
+    //
+    // When embedded in Aurora (`?token=<jwt>&embedded=1`), we accept the
+    // parent app's session and skip the login overlay.
+    const urlParams = new URLSearchParams(location.search);
+    const isEmbedded = urlParams.get('embedded') === '1' || window.self !== window.top;
+
+    function bootstrapTokenFromAurora() {
+      const tokenFromQuery = (urlParams.get('token') || '').trim();
+      if (tokenFromQuery) {
+        localStorage.setItem('auth_token', tokenFromQuery);
+        const emailFromQuery = (urlParams.get('email') || '').trim();
+        if (emailFromQuery) localStorage.setItem('user_email', emailFromQuery);
+        // Strip secrets from the address bar while keeping embedded mode.
+        const clean = new URL(location.href);
+        clean.searchParams.delete('token');
+        clean.searchParams.delete('email');
+        if (isEmbedded) clean.searchParams.set('embedded', '1');
+        history.replaceState({}, '', clean.pathname + clean.search + clean.hash);
+      }
+    }
+    bootstrapTokenFromAurora();
+
+    function getAuthToken() {
+      return (localStorage.getItem('auth_token') || '').trim();
+    }
+    function authHeaders(extra = {}) {
+      const t = getAuthToken();
+      return t ? { ...extra, Authorization: `Bearer ${t}` } : extra;
+    }
+    function logout() {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_email');
+      localStorage.removeItem('session_id');
+      if (ws) { try { ws.close(); } catch (_) {} ws = null; }
+      if (isEmbedded) {
+        // Parent Aurora owns the session — ask it to handle logout/navigation.
+        try {
+          window.parent.postMessage({ type: 'aurora-ai-logout' }, '*');
+        } catch (_) {}
+        showLogin();
+        loginError.textContent = 'Session ended. Return to Aurora and open AI Assistant again.';
+        return;
+      }
+      location.reload();
+    }
+    async function loginWithCredentials(email, password) {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || `Login failed (${res.status})`);
+      }
+      if (!data.token) {
+        throw new Error('Login response had no token');
+      }
+      localStorage.setItem('auth_token', data.token);
+      if (data.email) localStorage.setItem('user_email', data.email);
+      return data;
+    }
+
+    // ── WebSocket ──────────────────────────────────────
+
+    function connectWebSocket() {
+      const token = getAuthToken();
+      if (!token) {
+        console.error('[ws] no auth token — refusing to connect');
+        return;
+      }
+      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+      ws = new WebSocket(`${proto}://${location.host}/ws/chat?token=${encodeURIComponent(token)}`);
+
+      ws.onopen = () => console.log('[ws] connected');
+
+      ws.onmessage = (evt) => {
+        try {
+          const event = JSON.parse(evt.data);
+          handleWsMessage(event);
+        } catch (e) {
+          console.error('[ws] bad message', e);
+        }
+      };
+
+      ws.onclose = (evt) => {
+        if (evt.code === 4401) {
+          console.warn('[ws] auth rejected — clearing token and showing login');
+          localStorage.removeItem('auth_token');
+          showLogin();
+          return;
+        }
+        console.log('[ws] disconnected — reconnecting in 2s');
+        setTimeout(connectWebSocket, 2000);
+      };
+
+      ws.onerror = (err) => console.error('[ws] error', err);
+    }
+
+    function handleWsMessage(event) {
+      switch (event.type) {
+        case 'token':
+          if (currentAssistantDiv) {
+            currentAssistantDiv.textContent += event.content;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+          }
+          break;
+
+        case 'tool_start': {
+          // Indicator inside the assistant bubble (will be stripped on done)
+          if (currentAssistantDiv) {
+            const indicator = document.createElement('div');
+            indicator.className = 'tool-indicator';
+            indicator.textContent = `[Using ${event.name}...]`;
+            currentAssistantDiv.appendChild(indicator);
+          }
+
+          // Persistent card in the chat stream (outside assistant div)
+          const card = document.createElement('div');
+          card.className = 'tool-result-card loading';
+          card.setAttribute('data-tool', event.name);
+          card.innerHTML = `<div class="tool-result-header">${escapeHtml(event.name)}</div><div class="tool-result-body">Loading…</div>`;
+          chatContainer.appendChild(card);
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+          break;
+        }
+
+        case 'tool_result': {
+          // Populate the oldest still-loading card for this tool name
+          // (handles same-name parallel/repeated calls — first match wins, but only among loading ones)
+          const card = chatContainer.querySelector(`.tool-result-card.loading[data-tool="${event.name}"]`);
+          if (card) {
+            card.classList.remove('loading');
+            const body = card.querySelector('.tool-result-body');
+            body.textContent = event.result || '(no output)';
+          }
+
+          // Update indicator inside assistant bubble
+          if (currentAssistantDiv) {
+            const indicators = currentAssistantDiv.querySelectorAll('.tool-indicator');
+            for (const ind of indicators) {
+              if (ind.textContent.includes(event.name)) {
+                ind.textContent = `[${event.name} done]`;
+                break;
+              }
+            }
+          }
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+          break;
+        }
+
+        case 'done':
+          if (currentAssistantDiv) {
+            // Strip tool indicators from the final bubble
+            currentAssistantDiv.querySelectorAll('.tool-indicator').forEach(el => el.remove());
+            currentAssistantDiv.classList.remove('streaming');
+          }
+          currentAssistantDiv = null;
+          isStreaming = false;
+          sendBtn.disabled = false;
+          messageInput.focus();
+          loadSessions();
+          break;
+
+        case 'error':
+          if (currentAssistantDiv) {
+            currentAssistantDiv.textContent = event.content || 'An error occurred.';
+            currentAssistantDiv.classList.remove('streaming');
+          }
+          currentAssistantDiv = null;
+          isStreaming = false;
+          sendBtn.disabled = false;
+          messageInput.focus();
+          break;
+      }
+    }
+
+    // ── Session helpers ────────────────────────────────
+
+    function generateId() {
+      return crypto.randomUUID();
+    }
+
+    async function loadSessions() {
+      try {
+        const res = await fetch('/sessions', { headers: authHeaders() });
+        const sessions = await res.json();
+        renderSessionList(sessions);
+      } catch (e) {
+        console.error('Failed to load sessions', e);
+      }
+    }
+
+    function renderSessionList(sessions) {
+      sessionListEl.innerHTML = '';
+      for (const s of sessions) {
+        const div = document.createElement('div');
+        div.className = 'session-item' + (s.id === currentSessionId ? ' active' : '');
+        div.innerHTML = `
+          <span class="session-title">${escapeHtml(s.title)}</span>
+          <button class="delete-session-btn" title="Delete">&times;</button>
+        `;
+        div.querySelector('.session-title').addEventListener('click', () => switchSession(s.id));
+        div.querySelector('.delete-session-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteSession(s.id);
+        });
+        sessionListEl.appendChild(div);
+      }
+    }
+
+    function escapeHtml(text) {
+      const d = document.createElement('div');
+      d.textContent = text;
+      return d.innerHTML;
+    }
+
+    async function switchSession(sessionId) {
+      currentSessionId = sessionId;
+      localStorage.setItem('session_id', sessionId);
+      await loadHistory(sessionId);
+      await loadSessions();
+    }
+
+    async function loadHistory(sessionId) {
+      chatContainer.innerHTML = '';
+      try {
+        const res = await fetch(`/sessions/${sessionId}/messages`, { headers: authHeaders() });
+        const messages = await res.json();
+        if (messages.length === 0) {
+          showWelcome();
+          return;
+        }
+        for (const msg of messages) {
+          addMessage(msg.content, msg.role);
+        }
+      } catch (e) {
+        showWelcome();
+      }
+    }
+
+    function showWelcome() {
+      chatContainer.innerHTML = `
+        <div class="welcome">
+          <h2>Campaign Analyst Assistant</h2>
+          Ask me anything about your advertising campaigns.<br>
+          Try: "How many campaigns are active?" or "Which campaign has the highest budget?"
+        </div>
+      `;
+    }
+
+    async function startNewChat() {
+      currentSessionId = generateId();
+      localStorage.setItem('session_id', currentSessionId);
+      chatContainer.innerHTML = '';
+      showWelcome();
+      await loadSessions();
+    }
+
+    async function deleteSession(sessionId) {
+      try {
+        await fetch(`/sessions/${sessionId}`, { method: 'DELETE', headers: authHeaders() });
+        if (sessionId === currentSessionId) {
+          await startNewChat();
+        }
+        await loadSessions();
+      } catch (e) {
+        console.error('Failed to delete session', e);
+      }
+    }
+
+    // ── Chat functions ─────────────────────────────────
+
+    function addMessage(text, role) {
+      const welcome = chatContainer.querySelector('.welcome');
+      if (welcome) welcome.remove();
+
+      const div = document.createElement('div');
+      div.className = `message ${role}`;
+      div.textContent = text;
+      chatContainer.appendChild(div);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      return div;
+    }
+
+    function sendMessage() {
+      const text = messageInput.value.trim();
+      if (!text || isStreaming) return;
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        alert('Not connected to server. Reconnecting...');
+        connectWebSocket();
+        return;
+      }
+
+      addMessage(text, 'user');
+      messageInput.value = '';
+      isStreaming = true;
+      sendBtn.disabled = true;
+
+      currentAssistantDiv = addMessage('', 'assistant');
+      currentAssistantDiv.classList.add('streaming');
+
+      ws.send(JSON.stringify({
+        type: 'chat',
+        session_id: currentSessionId,
+        message: text,
+      }));
+    }
+
+    // ── Event listeners ────────────────────────────────
+
+    sendBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+    newChatBtn.addEventListener('click', startNewChat);
+
+    // ── COGS uploader ──────────────────────────────────
+    const cogsFile = document.getElementById('cogs-file');
+    const cogsUploadBtn = document.getElementById('cogs-upload-btn');
+    const cogsPaste = document.getElementById('cogs-paste');
+    const cogsPasteBtn = document.getElementById('cogs-paste-btn');
+    const cogsStatus = document.getElementById('cogs-status');
+
+    async function postCogsCsv(text) {
+      cogsStatus.textContent = 'Uploading…';
+      try {
+        const r = await fetch('/cogs/upload', {
+          method: 'POST',
+          headers: authHeaders({ 'Content-Type': 'text/csv' }),
+          body: text,
+        });
+        const j = await r.json();
+        if (j.error) {
+          cogsStatus.textContent = `Error: ${j.error}`;
+          return;
+        }
+        cogsStatus.textContent = `Saved ${j.saved} SKUs` + (j.skipped ? ` (skipped ${j.skipped})` : '');
+      } catch (e) {
+        cogsStatus.textContent = `Upload failed: ${e}`;
+      }
+    }
+
+    cogsUploadBtn.addEventListener('click', () => cogsFile.click());
+    cogsFile.addEventListener('change', async () => {
+      const f = cogsFile.files[0];
+      if (!f) return;
+      const text = await f.text();
+      await postCogsCsv(text);
+      cogsFile.value = '';
+    });
+    cogsPasteBtn.addEventListener('click', async () => {
+      const text = cogsPaste.value.trim();
+      if (!text) {
+        cogsStatus.textContent = 'Paste a CSV first.';
+        return;
+      }
+      await postCogsCsv(text);
+    });
+
+    const loginOverlay = document.getElementById('login-overlay');
+    const loginForm = document.getElementById('login-card');
+    const loginEmail = document.getElementById('login-email');
+    const loginPassword = document.getElementById('login-password');
+    const loginSubmit = document.getElementById('login-submit');
+    const loginError = document.getElementById('login-error');
+    const userEmailEl = document.getElementById('user-email');
+
+    function showLogin() {
+      loginOverlay.classList.add('visible');
+      loginError.textContent = '';
+      if (isEmbedded) {
+        loginError.textContent = 'Aurora session missing. Open AI Assistant from the Aurora navbar.';
+        loginSubmit.disabled = true;
+        return;
+      }
+      const savedEmail = localStorage.getItem('user_email');
+      if (savedEmail) loginEmail.value = savedEmail;
+      setTimeout(() => (savedEmail ? loginPassword : loginEmail).focus(), 50);
+    }
+    function hideLogin() {
+      loginOverlay.classList.remove('visible');
+    }
+
+    if (isEmbedded) {
+      document.body.classList.add('embedded-in-aurora');
+      const logoutBtn = document.getElementById('logout-btn');
+      if (logoutBtn) logoutBtn.style.display = 'none';
+      const welcome = document.querySelector('.welcome');
+      if (welcome) {
+        welcome.innerHTML = `
+          <h2>How can I help?</h2>
+          Ask about campaigns, orders, inventory, profitability, or restock planning.<br>
+          Try: “Which campaigns have high ACOS?” or “What should I reorder?”
+        `;
+      }
+    }
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = loginEmail.value.trim();
+      const password = loginPassword.value;
+      if (!email || !password) return;
+      loginSubmit.disabled = true;
+      loginError.textContent = '';
+      try {
+        await loginWithCredentials(email, password);
+        hideLogin();
+        await startApp();
+      } catch (err) {
+        loginError.textContent = err.message || 'Login failed';
+      } finally {
+        loginSubmit.disabled = false;
+      }
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', logout);
+
+    // ── Restock tab ─────────────────────────────────────
+    const chatContainerEl = document.getElementById('chat-container');
+    const inputAreaEl = document.getElementById('input-area');
+    const restockViewEl = document.getElementById('restock-view');
+    const restockBodyEl = document.getElementById('restock-body');
+    const restockEmptyEl = document.getElementById('restock-empty');
+    const restockEmptyHintEl = document.getElementById('restock-empty-hint');
+    const restockLoadingEl = document.getElementById('restock-loading');
+    const restockLoadingTextEl = document.getElementById('restock-loading-text');
+    const restockTableWrapEl = document.getElementById('restock-table-wrap');
+    const restockStampEl = document.getElementById('restock-stamp');
+    const restockCountEl = document.getElementById('restock-count');
+    const restockShowNoDemandEl = document.getElementById('restock-show-no-demand');
+    const restockHideNonBuyableEl = document.getElementById('restock-hide-non-buyable');
+    const restockSearchEl = document.getElementById('restock-search');
+    const restockOrdersWindowEl = document.getElementById('restock-orders-window');
+    const restockOrdersHeaderEl = document.getElementById('restock-orders-header');
+    // Velocity window selector was replaced with a single weighted-velocity
+    // column (0.5/0.3/0.2/0/0). Elements below no longer exist.
+    // const restockVelocityWindowEl = document.getElementById('restock-velocity-window');
+    // const restockVelocityHeaderEl = document.getElementById('restock-velocity-header');
+    // const restockUnitsHeaderEl = document.getElementById('restock-units-header');
+    // let restockVelocityWindow = 30;
+    const restockRefreshBtn = document.getElementById('restock-refresh');
+    const restockSettingsToggle = document.getElementById('restock-settings-toggle');
+    const restockSettingsPanel = document.getElementById('restock-settings');
+    let restockCache = [];  // last fetch — re-rendered on toggle
+    // MOQ input removed from the toolbar — keep the backend field alone,
+    // but the seller-facing control is gone.
+    const settingCover = document.getElementById('setting-target-cover');
+    const settingAirTransit = document.getElementById('setting-air-transit');
+    const settingOceanTransit = document.getElementById('setting-ocean-transit');
+    const settingSave = document.getElementById('setting-save');
+    let restockLoaded = false;
+    let skuChart = null;
+
+    // ── Orders tab refs ─────────────────────────────────
+    const ordersViewEl = document.getElementById('orders-view');
+    const ordersBodyEl = document.getElementById('orders-body');
+    const ordersEmptyEl = document.getElementById('orders-empty');
+    const ordersStampEl = document.getElementById('orders-stamp');
+    const ordersMarketplaceEl = document.getElementById('orders-marketplace');
+    const ordersDaysEl = document.getElementById('orders-days');
+    const ordersStatusEl = document.getElementById('orders-status');
+    const ordersBuyerEl = document.getElementById('orders-buyer');
+    const ordersRefreshBtn = document.getElementById('orders-refresh');
+    let ordersLoaded = false;
+    const marketplaceNames = {};
+
+    // ── Campaigns + Profitability tab refs ──────────────
+    const campaignsViewEl = document.getElementById('campaigns-view');
+    const campaignsBodyEl = document.getElementById('campaigns-body');
+    const campaignsKpisEl = document.getElementById('campaigns-kpis');
+    const campaignsRecsEl = document.getElementById('campaigns-recs');
+    const campaignsEmptyEl = document.getElementById('campaigns-empty');
+    const campaignsRefreshBtn = document.getElementById('campaigns-refresh');
+    let campaignsLoaded = false;
+
+    const profitViewEl = document.getElementById('profit-view');
+    const profitBodyEl = document.getElementById('profit-body');
+    const profitFootEl = document.getElementById('profit-foot');
+    const profitKpisEl = document.getElementById('profit-kpis');
+    const profitCaveatsEl = document.getElementById('profit-caveats');
+    const profitEmptyEl = document.getElementById('profit-empty');
+    const profitStampEl = document.getElementById('profit-stamp');
+    const profitStartEl = document.getElementById('profit-start');
+    const profitEndEl = document.getElementById('profit-end');
+    // Default range: last 7 days ending "today" in marketplace TZ.
+    // toISOString() is UTC and shifts the calendar day vs Seller Central PDT
+    // (e.g. evening in India can already be the next UTC date).
+    (function initProfitDates() {
+      const tz = 'America/Los_Angeles';
+      const ymdInTz = (d) => {
+        const parts = new Intl.DateTimeFormat('en-US', {
+          timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
+        }).formatToParts(d);
+        const get = (t) => parts.find((p) => p.type === t)?.value || '00';
+        return `${get('year')}-${get('month')}-${get('day')}`;
+      };
+      const today = new Date();
+      const back7 = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      profitEndEl.value = ymdInTz(today);
+      profitStartEl.value = ymdInTz(back7);
+    })();
+    const profitRefreshBtn = document.getElementById('profit-refresh');
+    const profitSearchEl = document.getElementById('profit-search');
+    let profitLoaded = false;
+
+    function applyProfitSearchFilter() {
+      const q = (profitSearchEl.value || '').trim().toLowerCase();
+      profitBodyEl.querySelectorAll('tr[data-sku]').forEach(tr => {
+        const hit = !q || tr.dataset.sku.includes(q) || tr.dataset.asin.includes(q);
+        tr.style.display = hit ? '' : 'none';
+      });
+    }
+    let profitSearchTimer = null;
+    profitSearchEl.addEventListener('input', () => {
+      clearTimeout(profitSearchTimer);
+      profitSearchTimer = setTimeout(applyProfitSearchFilter, 120);
+    });
+
+    const cogsViewEl = document.getElementById('cogs-view');
+    const cogsBodyEl = document.getElementById('cogs-body');
+    const cogsStampEl = document.getElementById('cogs-stamp');
+    const cogsStatusEl = document.getElementById('cogs-status');
+    const cogsEmptyEl = document.getElementById('cogs-empty');
+    const cogsAddForm = document.getElementById('cogs-add-form');
+    const cogsAddSkuEl = document.getElementById('cogs-add-sku');
+    const cogsAddCostEl = document.getElementById('cogs-add-cost');
+    const cogsAddShipEl = document.getElementById('cogs-add-ship');
+    let cogsLoaded = false;
+
+    const keywordsViewEl = document.getElementById('keywords-view');
+    const kwAsinsEl = document.getElementById('kw-asins');
+    const kwCampaignEl = document.getElementById('kw-campaign');
+    const kwAdgroupEl = document.getElementById('kw-adgroup');
+    const kwRunBtn = document.getElementById('kw-run-btn');
+    const kwStatusEl = document.getElementById('kw-status');
+    const kwStepperEl = document.getElementById('kw-stepper');
+    const kwStripEl = document.getElementById('kw-source-strip');
+    const kwMatrixEl = document.getElementById('kw-matrix');
+    const kwErrorEl = document.getElementById('kw-error');
+    let kwPollTimer = null;
+
+    function setActiveTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.tab === tab);
+      });
+      const isChat = tab === 'chat';
+      const isRestock = tab === 'restock';
+      const isOrders = tab === 'orders';
+      const isCampaigns = tab === 'campaigns';
+      const isProfit = tab === 'profit';
+      const isCogs = tab === 'cogs';
+      const isKeywords = tab === 'keywords';
+      chatContainerEl.style.display = isChat ? 'flex' : 'none';
+      inputAreaEl.style.display = isChat ? 'flex' : 'none';
+      restockViewEl.classList.toggle('visible', isRestock);
+      ordersViewEl.classList.toggle('visible', isOrders);
+      campaignsViewEl.classList.toggle('visible', isCampaigns);
+      profitViewEl.classList.toggle('visible', isProfit);
+      cogsViewEl.classList.toggle('visible', isCogs);
+      keywordsViewEl.classList.toggle('visible', isKeywords);
+      if (isRestock && !restockLoaded) {
+        loadRestock();
+        loadForecastSettings();
+        restockLoaded = true;
+      }
+      if (isOrders && !ordersLoaded) {
+        loadMarketplaces().then(loadOrders);
+        ordersLoaded = true;
+      }
+      if (isCampaigns && !campaignsLoaded) {
+        loadCampaignsPerformance();
+        campaignsLoaded = true;
+      }
+      if (isProfit && !profitLoaded) {
+        loadProfitability();
+        profitLoaded = true;
+      }
+      if (isCogs && !cogsLoaded) {
+        loadCogs();
+        cogsLoaded = true;
+      }
+    }
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.addEventListener('click', () => setActiveTab(b.dataset.tab));
+    });
+
+    function urgencyClass(daysOfCover) {
+      if (daysOfCover === null || daysOfCover === undefined) return 'urgency-grey';
+      if (daysOfCover <= 7) return 'urgency-red';
+      if (daysOfCover <= 21) return 'urgency-orange';
+      if (daysOfCover <= 45) return 'urgency-amber';
+      return 'urgency-green';
+    }
+
+    function fmtDaysOfCover(d) {
+      if (d === null || d === undefined) return 'no demand';
+      return `${d.toFixed(1)} d`;
+    }
+
+    function fmtDaysUntil(d) {
+      if (d === null || d === undefined) return '—';
+      if (d === 0) return 'today';
+      return d > 0 ? `${d}d` : `${d}d (late)`;
+    }
+
+    function fmtRestockDate(iso) {
+      if (!iso || iso === '—') return '—';
+      try {
+        const d = new Date(iso.includes('T') ? iso : `${iso}T12:00:00`);
+        if (Number.isNaN(d.getTime())) return iso;
+        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      } catch (_) {
+        return iso;
+      }
+    }
+
+    function fmtRestockNum(n, decimals = 0) {
+      if (n === null || n === undefined) return '—';
+      return Number(n).toLocaleString(undefined, {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      });
+    }
+
+    function truncateSku(sku, maxLen = 44) {
+      const s = String(sku || '');
+      if (s.length <= maxLen) return s;
+      return `${s.slice(0, maxLen - 1)}…`;
+    }
+
+    function setRestockLoading(on, message) {
+      restockLoadingEl.classList.toggle('visible', on);
+      if (message) restockLoadingTextEl.textContent = message;
+      restockRefreshBtn.disabled = on;
+      restockSettingsToggle.disabled = on;
+    }
+
+    function isNoDemand(row) {
+      // A row is "no demand" when the model has no signal AND there's no
+      // action to take: undefined days of cover and a zero PO suggestion.
+      return (row.days_of_cover === null || row.days_of_cover === undefined)
+        && (!row.recommended_po_qty || row.recommended_po_qty === 0);
+    }
+
+    function renderRestockRows() {
+      restockBodyEl.innerHTML = '';
+      const showAll = restockShowNoDemandEl.checked;
+      const hideNonBuyable = restockHideNonBuyableEl.checked;
+      const q = (restockSearchEl.value || '').trim().toLowerCase();
+      const ordersWindow = parseInt(restockOrdersWindowEl.value, 10) || 30;
+      const ordersField = `orders_${ordersWindow}d`;
+      if (restockOrdersHeaderEl) restockOrdersHeaderEl.textContent = `Orders/day (${ordersWindow}d)`;
+
+      let visible = showAll
+        ? restockCache
+        : restockCache.filter(r => !isNoDemand(r));
+      if (hideNonBuyable) {
+        visible = visible.filter(r => r.is_buyable !== false);
+      }
+      if (q) {
+        visible = visible.filter(r =>
+          (r.sku && r.sku.toLowerCase().includes(q)) ||
+          (r.asin && r.asin.toLowerCase().includes(q))
+        );
+      }
+
+      const totalHidden = restockCache.length - visible.length;
+      const tailParts = [];
+      if (!showAll) {
+        const noDemandHidden = restockCache.filter(r => isNoDemand(r)).length;
+        if (noDemandHidden > 0) tailParts.push(`${noDemandHidden} no-demand`);
+      }
+      if (hideNonBuyable) {
+        const nbHidden = restockCache.filter(r => r.is_buyable === false).length;
+        if (nbHidden > 0) tailParts.push(`${nbHidden} non-buyable`);
+      }
+      if (q) tailParts.push(`search "${q}"`);
+      const tail = tailParts.length > 0 ? ` (${tailParts.join(', ')} filtered)` : '';
+      restockCountEl.textContent = `${visible.length} SKU${visible.length === 1 ? '' : 's'}${tail}`;
+
+      for (const row of visible) {
+        const tr = document.createElement('tr');
+        tr.dataset.sku = row.sku;
+        // is_buyable defaults to true when the field is absent (older
+        // cached responses / SKUs Aurora hasn't classified yet).
+        const isBuyable = row.is_buyable !== false;
+        if (!isBuyable) tr.classList.add('row-not-buyable');
+        const notBuyableTip = isBuyable
+          ? ''
+          : `Amazon has this listing blocked — status="${row.status || '?'}" listingStatus="${row.listing_status || '?'}". Restock recommendation suppressed.`;
+        const notBuyableBadge = isBuyable
+          ? ''
+          : ` <span class="not-buyable-badge" title="${escapeHtml(notBuyableTip)}">🚫 not buyable</span>`;
+        const docCls = urgencyClass(row.days_of_cover);
+        const inboundCount = row.inbound_shipments_count ?? 0;
+        const inboundTip = inboundCount
+          ? `${inboundCount} in-flight shipment${inboundCount === 1 ? '' : 's'} feeding the projection`
+          : 'No in-flight shipments — projection uses on-hand + demand only';
+        const nextArrivalCell = row.next_shipment_eta
+          ? `<span class="next-arrival"><strong>${row.next_shipment_qty ?? 0}</strong> by ${row.next_shipment_eta}` +
+            (inboundCount > 1 ? ` <span class="next-arrival-more">+${inboundCount - 1} more</span>` : '') +
+            `</span>`
+          : `<span class="next-arrival-none">—</span>`;
+        const airTip = `Dispatch by this date — ${row.air_transit_days ?? 10}d air transit to Amazon FC`;
+        const oceanTip = `Dispatch by this date — ${row.ocean_transit_days ?? 45}d ocean transit to Amazon FC`;
+        tr.innerHTML = `
+          <td class="sku-cell" title="${escapeHtml(row.sku)}${notBuyableTip ? '\n' + escapeHtml(notBuyableTip) : ''}">
+            <span class="sku-name">${escapeHtml(truncateSku(row.sku))}</span>${notBuyableBadge}
+          </td>
+          <td title="${escapeHtml(row.asin || '')}">${escapeHtml(row.asin || '—')}</td>
+          <td title="${escapeHtml(row.fnsku || '')}">${escapeHtml(row.fnsku || '—')}</td>
+          <td class="num">${fmtRestockNum(row.on_hand ?? 0)}</td>
+          <td class="num">${fmtRestockNum(row.reserved ?? 0)}</td>
+          <td class="num">${fmtRestockNum(row.sent_to_fba ?? 0)}</td>
+          <td class="num">${fmtRestockNum(row.inbound_working ?? 0)}</td>
+          <td class="num">${fmtRestockNum(row.unfulfillable ?? 0)}</td>
+          <!-- <td class="num" title="${inboundTip}">${fmtRestockNum(row.inbound ?? 0)}</td> -->
+          <td title="${inboundTip}">${nextArrivalCell}</td>
+          <td class="num">${fmtRestockNum(row.weighted_velocity ?? 0, 2)}</td>
+          <td class="num">${fmtRestockNum((row[ordersField] ?? 0) / ordersWindow, 2)}</td>
+          <!-- <td class="num restock-units-cell">${fmtRestockNum(row.units_30d ?? 0)}</td> -->
+          <td class="num">${fmtRestockNum(row.next_30_day_forecast ?? 0, 1)}</td>
+          <td><span class="urgency-pill ${docCls}">${fmtDaysOfCover(row.days_of_cover)}</span></td>
+          <td class="num" title="Historical days of supply (Amazon). Grey when the Inventory Planning report hasn't been generated in the last 24h — open the Profitability tab to warm the cache.">${row.historical_days_of_supply == null ? '<span style="color:#888;">—</span>' : fmtRestockNum(row.historical_days_of_supply, 1)}</td>
+          <td class="date-cell">${fmtRestockDate(row.stockout_date)}</td>
+          <td class="date-cell" title="${airTip}">${fmtRestockDate(row.reorder_by_date_air)}</td>
+          <td class="date-cell" title="${oceanTip}">${fmtRestockDate(row.reorder_by_date_ocean ?? row.reorder_by_date_sea)}</td>
+          <td class="num">${fmtDaysUntil(row.days_until_next_order)}</td>
+          <td class="num num-strong">${isBuyable ? fmtRestockNum(row.recommended_po_qty ?? 0) : '—'}</td>
+          <!-- <td class="num">${row.amazon_recommended_ship_qty == null ? '—' : fmtRestockNum(row.amazon_recommended_ship_qty)}</td> -->
+          <td class="num">${fmtRestockNum(row.ordered ?? 0)}</td>
+          <td class="num">${row.stock_value > 0 ? '$' + fmtRestockNum(row.stock_value, 2) : '—'}</td>
+          <td class="num">${row.missed_profit_est > 0 ? '$' + fmtRestockNum(row.missed_profit_est, 2) : '$0.00'}</td>
+          <td class="comment-cell" title="${escapeHtml(row.comment || '')}">${escapeHtml(row.comment ? (row.comment.length > 30 ? row.comment.slice(0, 30) + '…' : row.comment) : '—')}</td>
+          <td class="actions-cell"><button class="actions-btn" data-sku="${escapeHtml(row.sku)}" title="Product settings">⋯</button></td>
+        `;
+        // Row click opens the forecast drawer; the Actions button opens
+        // the settings modal instead (stopPropagation so it doesn't do both).
+        tr.addEventListener('click', (ev) => {
+          if (ev.target.closest('.actions-btn')) return;
+          openSkuDrawer(row.sku);
+        });
+        tr.querySelector('.actions-btn').addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          openProductSettingsModal(row.sku);
+        });
+        restockBodyEl.appendChild(tr);
+      }
+    }
+
+    async function loadRestock() {
+      restockBodyEl.innerHTML = '';
+      restockEmptyEl.style.display = 'none';
+      restockCountEl.textContent = '';
+      try {
+        const r = await fetch('/forecasting/restock', { headers: authHeaders() });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        restockCache = data.rows || [];
+        if (restockCache.length === 0) {
+          restockEmptyEl.style.display = 'block';
+          if (restockTableWrapEl) restockTableWrapEl.style.display = 'none';
+          restockStampEl.textContent = '';
+          return;
+        }
+        if (restockTableWrapEl) restockTableWrapEl.style.display = '';
+        let latest = '';
+        for (const row of restockCache) {
+          if (row.generated_at && row.generated_at > latest) latest = row.generated_at;
+        }
+        if (latest) {
+          const d = new Date(latest);
+          restockStampEl.textContent = `Last refreshed ${d.toLocaleString()}`;
+        }
+        renderRestockRows();
+      } catch (err) {
+        restockBodyEl.innerHTML = `<tr><td colspan="11" style="padding:20px;color:#c62828;">Failed to load: ${escapeHtml(String(err))}</td></tr>`;
+      }
+    }
+
+    restockShowNoDemandEl.addEventListener('change', renderRestockRows);
+    restockHideNonBuyableEl.addEventListener('change', renderRestockRows);
+    restockOrdersWindowEl.addEventListener('change', renderRestockRows);
+    // Debounce search input so we don't rerender on every keystroke.
+    let restockSearchTimer = null;
+    restockSearchEl.addEventListener('input', () => {
+      if (restockSearchTimer) clearTimeout(restockSearchTimer);
+      restockSearchTimer = setTimeout(renderRestockRows, 150);
+    });
+
+    // Velocity window selector removed — Orders/day now shows the fixed
+    // weighted-velocity number computed on the backend.
+
+    restockRefreshBtn.addEventListener('click', async () => {
+      const orig = restockRefreshBtn.textContent;
+      setRestockLoading(true, 'Loading sales history from Aurora (first run may take a few minutes)…');
+      try {
+        const r = await fetch('/forecasting/refresh', {
+          method: 'POST', headers: authHeaders(),
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.error || data.detail || `HTTP ${r.status}`);
+        setRestockLoading(true, 'Fitting forecasts for each SKU…');
+        await loadRestock();
+        if ((data.skus || 0) === 0 && data.hint) {
+          restockEmptyHintEl.textContent = ' ' + data.hint;
+        } else {
+          restockEmptyHintEl.textContent = '';
+        }
+      } catch (err) {
+        alert(`Refresh failed: ${err}`);
+      } finally {
+        setRestockLoading(false);
+        restockRefreshBtn.textContent = orig;
+      }
+    });
+
+    restockSettingsToggle.addEventListener('click', () => {
+      restockSettingsPanel.classList.toggle('visible');
+    });
+
+    async function loadForecastSettings() {
+      try {
+        const r = await fetch('/forecasting/settings', { headers: authHeaders() });
+        if (!r.ok) return;
+        const s = await r.json();
+        settingCover.value = s.target_cover_days;
+        settingAirTransit.value = s.air_transit_days ?? 10;
+        settingOceanTransit.value = s.ocean_transit_days ?? 45;
+      } catch (_) {}
+    }
+
+    settingSave.addEventListener('click', async () => {
+      settingSave.disabled = true;
+      settingSave.textContent = 'Saving…';
+      try {
+        await fetch('/forecasting/settings', {
+          method: 'PUT',
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({
+            target_cover_days: Number(settingCover.value),
+            air_transit_days: Number(settingAirTransit.value),
+            ocean_transit_days: Number(settingOceanTransit.value),
+          }),
+        });
+        settingSave.textContent = 'Saved';
+        setTimeout(() => { settingSave.textContent = 'Save'; settingSave.disabled = false; }, 900);
+        // Recompute so target_cover_days changes flow into Suggested qty.
+        await fetch('/forecasting/refresh', { method: 'POST', headers: authHeaders() });
+        await loadRestock();
+      } catch (err) {
+        alert(`Save failed: ${err}`);
+        settingSave.textContent = 'Save';
+        settingSave.disabled = false;
+      }
+    });
+
+    // ── Orders tab ──────────────────────────────────────
+    async function loadMarketplaces() {
+      try {
+        const r = await fetch('/amazon/marketplaces', { headers: authHeaders() });
+        if (!r.ok) return;
+        const data = await r.json();
+        const opts = ['<option value="">All</option>'];
+        for (const m of data.marketplaces || []) {
+          marketplaceNames[m.id] = m.name;
+          const label = `${m.name}${m.is_primary ? ' (primary)' : ''}`;
+          opts.push(`<option value="${escapeHtml(m.id)}">${escapeHtml(label)}</option>`);
+        }
+        ordersMarketplaceEl.innerHTML = opts.join('');
+      } catch (_) {}
+    }
+
+    function statusPillClass(status) {
+      if (!status) return 'status-pill';
+      return `status-pill status-${status.toLowerCase()}`;
+    }
+
+    function fmtMoney(amt) {
+      if (!amt) return '—';
+      const n = Number(amt.Amount);
+      if (!isFinite(n)) return '—';
+      return `${n.toFixed(2)} ${amt.CurrencyCode || ''}`.trim();
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      try { return new Date(iso).toLocaleString(); } catch (_) { return iso; }
+    }
+
+    async function loadOrders() {
+      ordersBodyEl.innerHTML = '<tr><td colspan="7" style="padding:20px;color:#888;">Loading…</td></tr>';
+      ordersEmptyEl.style.display = 'none';
+      ordersRefreshBtn.disabled = true;
+      const params = new URLSearchParams();
+      params.set('days_back', String(Number(ordersDaysEl.value) || 30));
+      if (ordersStatusEl.value) params.set('status', ordersStatusEl.value);
+      if (ordersMarketplaceEl.value) params.set('marketplace', ordersMarketplaceEl.value);
+      if (ordersBuyerEl.value.trim()) params.set('buyer_email', ordersBuyerEl.value.trim());
+      try {
+        const r = await fetch(`/amazon/orders?${params}`, { headers: authHeaders() });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        const orders = data.orders || [];
+        ordersStampEl.textContent = `${data.count} orders since ${fmtDate(data.created_after)}`;
+        if (!orders.length) {
+          ordersBodyEl.innerHTML = '';
+          ordersEmptyEl.style.display = 'block';
+          return;
+        }
+        const rows = orders.map(o => {
+          const id = o.AmazonOrderId || '';
+          const status = o.OrderStatus || '';
+          const purchased = fmtDate(o.PurchaseDate);
+          const marketId = o.MarketplaceId || '';
+          const market = marketplaceNames[marketId] || marketId || '—';
+          const items = o.NumberOfItemsShipped != null || o.NumberOfItemsUnshipped != null
+            ? `${o.NumberOfItemsShipped ?? 0} / ${(o.NumberOfItemsShipped ?? 0) + (o.NumberOfItemsUnshipped ?? 0)}`
+            : '—';
+          const total = fmtMoney(o.OrderTotal);
+          const shipBy = o.LatestShipDate ? fmtDate(o.LatestShipDate) : '—';
+          return `
+            <tr data-order-id="${escapeHtml(id)}">
+              <td><strong>${escapeHtml(id)}</strong></td>
+              <td>${escapeHtml(purchased)}</td>
+              <td><span class="${statusPillClass(status)}">${escapeHtml(status || '—')}</span></td>
+              <td>${escapeHtml(market)}</td>
+              <td class="num">${escapeHtml(items)}</td>
+              <td class="num">${escapeHtml(total)}</td>
+              <td>${escapeHtml(shipBy)}</td>
+            </tr>`;
+        });
+        ordersBodyEl.innerHTML = rows.join('');
+        ordersBodyEl.querySelectorAll('tr').forEach(tr => {
+          tr.addEventListener('click', () => openOrderDrawer(tr.dataset.orderId));
+        });
+      } catch (err) {
+        ordersBodyEl.innerHTML = `<tr><td colspan="7" style="padding:20px;color:#c62828;">Failed to load: ${escapeHtml(String(err))}</td></tr>`;
+      } finally {
+        ordersRefreshBtn.disabled = false;
+      }
+    }
+
+    ordersRefreshBtn.addEventListener('click', loadOrders);
+
+    async function openOrderDrawer(orderId) {
+      drawerTitle.textContent = orderId;
+      drawerKV.innerHTML = '<div>Loading…</div>';
+      if (skuChart) { skuChart.destroy(); skuChart = null; }
+      drawerEl.classList.add('visible');
+      drawerOverlay.classList.add('visible');
+      try {
+        const r = await fetch(`/amazon/orders/${encodeURIComponent(orderId)}/items`, { headers: authHeaders() });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        const items = data.items || [];
+        if (!items.length) {
+          drawerKV.innerHTML = '<div>No line items.</div>';
+          return;
+        }
+        drawerKV.innerHTML = items.map(it => `
+          <div><span>SKU</span><span>${escapeHtml(it.SellerSKU || '—')}</span></div>
+          <div><span>ASIN</span><span>${escapeHtml(it.ASIN || '—')}</span></div>
+          <div><span>Qty ordered</span><span>${it.QuantityOrdered ?? 0}</span></div>
+          <div><span>Qty shipped</span><span>${it.QuantityShipped ?? 0}</span></div>
+          <div><span>Item price</span><span>${escapeHtml(fmtMoney(it.ItemPrice))}</span></div>
+          <div><span>Promo discount</span><span>${escapeHtml(fmtMoney(it.PromotionDiscount))}</span></div>
+        `).join('');
+      } catch (err) {
+        drawerKV.innerHTML = `<div>Failed to load: ${escapeHtml(String(err))}</div>`;
+      }
+    }
+
+    // ── Campaigns tab ───────────────────────────────────
+    function kpiCard(label, value) {
+      return `<div class="kpi-card"><div class="label">${escapeHtml(label)}</div><div class="value">${escapeHtml(String(value))}</div></div>`;
+    }
+
+    function marginClass(m) {
+      if (m == null || isNaN(m)) return '';
+      if (m >= 25) return 'margin-good';
+      if (m >= 10) return 'margin-warn';
+      return 'margin-bad';
+    }
+
+    async function loadCampaignsPerformance() {
+      campaignsBodyEl.innerHTML = '<tr><td colspan="9" style="padding:20px;color:#888;">Loading…</td></tr>';
+      campaignsKpisEl.innerHTML = '';
+      campaignsRecsEl.classList.remove('visible');
+      campaignsEmptyEl.style.display = 'none';
+      campaignsRefreshBtn.disabled = true;
+      try {
+        const r = await fetch('/campaigns/performance', { headers: authHeaders() });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        if (data.empty || !data.overview) {
+          campaignsBodyEl.innerHTML = '';
+          campaignsEmptyEl.style.display = 'block';
+          return;
+        }
+        const ov = data.overview;
+        campaignsKpisEl.innerHTML = [
+          kpiCard('Total campaigns', ov.total_campaigns),
+          kpiCard('Enabled', ov.enabled),
+          kpiCard('Paused', ov.paused),
+          kpiCard('Total spend', `$${ov.total_spend_usd.toLocaleString()}`),
+          kpiCard('Total sales', `$${ov.total_sales_usd.toLocaleString()}`),
+          kpiCard('Overall ACOS', `${ov.overall_acos_pct}%`),
+        ].join('');
+
+        const recs = data.recommendations || [];
+        if (recs.length) {
+          campaignsRecsEl.innerHTML = `<strong>Recommendations</strong><ul>${recs.map(r => `<li>${escapeHtml(r)}</li>`).join('')}</ul>`;
+          campaignsRecsEl.classList.add('visible');
+        }
+
+        const rows = (data.campaigns || []).slice().sort((a, b) => (b.spend || 0) - (a.spend || 0));
+        if (!rows.length) {
+          campaignsBodyEl.innerHTML = '<tr><td colspan="9" style="padding:20px;color:#888;">No campaigns.</td></tr>';
+          return;
+        }
+        campaignsBodyEl.innerHTML = rows.map(c => {
+          const acos = (c.acos == null) ? '—' : (typeof c.acos === 'number' ? `${c.acos}%` : escapeHtml(String(c.acos)));
+          const roi = (c.roi_pct == null) ? '—' : `${c.roi_pct}%`;
+          return `<tr>
+            <td><strong>${escapeHtml(c.name || '—')}</strong></td>
+            <td>${escapeHtml(c.type || '—')}</td>
+            <td>${escapeHtml(c.status || '—')}</td>
+            <td>${escapeHtml(c.country || '—')}</td>
+            <td class="num">$${(c.spend || 0).toLocaleString()}</td>
+            <td class="num">$${(c.sales || 0).toLocaleString()}</td>
+            <td class="num">$${(c.budget || 0).toLocaleString()}</td>
+            <td class="num">${acos}</td>
+            <td class="num">${roi}</td>
+          </tr>`;
+        }).join('');
+      } catch (err) {
+        campaignsBodyEl.innerHTML = `<tr><td colspan="9" style="padding:20px;color:#c62828;">Failed to load: ${escapeHtml(String(err))}</td></tr>`;
+      } finally {
+        campaignsRefreshBtn.disabled = false;
+      }
+    }
+    campaignsRefreshBtn.addEventListener('click', loadCampaignsPerformance);
+
+    // ── Profitability tab ───────────────────────────────
+    async function loadProfitability() {
+      profitBodyEl.innerHTML = '<tr><td colspan="18" style="padding:20px;color:#888;">Loading… (first call may take 1–2 min: orders + items + fees per SKU + storage report + finances events)</td></tr>';
+      profitFootEl.innerHTML = '';
+      profitKpisEl.innerHTML = '';
+      profitCaveatsEl.classList.remove('visible');
+      profitEmptyEl.style.display = 'none';
+      profitRefreshBtn.disabled = true;
+      const start = profitStartEl.value;
+      const end = profitEndEl.value;
+      if (!start || !end || start > end) {
+        profitBodyEl.innerHTML = `<tr><td colspan="18" style="padding:20px;color:#c62828;">Pick a valid start ≤ end date.</td></tr>`;
+        profitRefreshBtn.disabled = false;
+        return;
+      }
+      try {
+        const qs = new URLSearchParams({ start, end }).toString();
+        const r = await fetch(`/profitability?${qs}`, { headers: authHeaders() });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        if (data.error) throw new Error(data.error);
+
+        profitStampEl.textContent = `${data.orders_count} orders, ${data.skus_count} SKUs · ${data.start ?? start} → ${data.end ?? end} (${data.window_days ?? '?'}d${data.timeZone ? ` · ${data.timeZone}` : ''})`;
+
+        const t = data.totals;
+        if (t) {
+          profitKpisEl.innerHTML = [
+            kpiCard('Units sold', t.units.toLocaleString()),
+            kpiCard('Revenue', `$${t.revenue.toLocaleString()}`),
+            kpiCard('Amz fees', `$${(t.amazon_fees || 0).toLocaleString()}`),
+            kpiCard('Storage', `$${(t.storage_fee || 0).toLocaleString()}`),
+            kpiCard('Removal', `$${(t.removal_fee || 0).toLocaleString(undefined, {maximumFractionDigits: 2})}`),
+            kpiCard('Ad spend', `$${(t.ad_cost || 0).toLocaleString()}`),
+            kpiCard('COGS + Inbound', `$${(t.cogs_total || 0).toLocaleString()}`),
+            kpiCard('Net profit', `$${(t.net || 0).toLocaleString()}`),
+            kpiCard('Margin', `${t.margin}%`),
+          ].join('');
+        }
+
+        const rows = data.rows || [];
+        if (!rows.length) {
+          profitBodyEl.innerHTML = '';
+          profitEmptyEl.style.display = 'block';
+        } else {
+          const money = v => `$${(Number(v) || 0).toLocaleString(undefined, {maximumFractionDigits: 2})}`;
+          profitBodyEl.innerHTML = rows.map(r => {
+            const skuLabel = r.cogs_uploaded
+              ? `<strong>${escapeHtml(r.sku)}</strong>`
+              : `<strong>${escapeHtml(r.sku)}</strong> <span title="No COGS uploaded" style="color:#b35200;">⚠</span>`;
+            return `
+              <tr data-sku="${escapeHtml((r.sku || '').toLowerCase())}" data-asin="${escapeHtml((r.asin || '').toLowerCase())}">
+                <td>${skuLabel}</td>
+                <td title="ASIN ${escapeHtml(r.asin || '—')}">${escapeHtml(r.asin || '—')}</td>
+                <td class="num">${r.units}</td>
+                <td class="num"><a href="#" class="profit-price-link" data-sku="${escapeHtml(r.sku)}" title="Click to see every unit's price">${money(r.avg_price)}</a></td>
+                <td class="num">${money(r.revenue)}</td>
+                <td class="num">${money(r.referral_fee)}</td>
+                <td class="num">${money(r.fba_fee)}</td>
+                <td class="num">${money(r.fuel_surcharge)}</td>
+                <td class="num" title="Inbound placement is blended from the Seller Central report for the date filter — see Totals">${(data.placement_blended || (data.placement_meta && data.placement_meta.blended)) ? `<span class="profit-ads-blended">BLENDED</span>` : money(r.inbound_placement_fee)}</td>
+                <td class="num">${money(r.low_inventory_fee)}</td>
+                <td class="num">${money(r.storage_fee)}</td>
+                <td class="num">${money(r.aged_inventory_fee)}</td>
+                <td class="num" title="Ads are blended across the account — see the top KPI tile"><span class="profit-ads-blended">BLENDED</span></td>
+                <td class="num profit-cogs-cell" data-sku="${escapeHtml(r.sku)}" data-unit-cost="${r.unit_cost ?? ''}" data-inbound-per-unit="${r.inbound_shipping_per_unit ?? ''}" data-units="${r.units}" title="Click to edit COGS">${money(r.cogs_total)}${r.cogs_uploaded ? '' : ' <span style=\"color:#b35200;\">⚠</span>'}</td>
+                <td class="num">${money(r.return_processing_fee)}</td>
+                <td class="num" title="Removal is blended from Seller Central Removal Order Detail for the date filter — see Totals / Removal KPI">${data.removal_blended ? `<span class="profit-ads-blended">BLENDED</span>` : money(r.removal_fee)}</td>
+                <td class="num ${marginClass(r.margin)}">${money(r.net)}</td>
+                <td class="num ${marginClass(r.margin)}">${r.margin}%</td>
+              </tr>`;
+          }).join('');
+          applyProfitSearchFilter();
+          if (t) {
+            profitFootEl.innerHTML = `
+              <tr class="profit-totals-row">
+                <td class="profit-totals-label">Totals</td>
+                <td>—</td>
+                <td class="num">${t.units}</td>
+                <td class="num">—</td>
+                <td class="num">${money(t.revenue)}</td>
+                <td class="num">${money(t.referral_fee)}</td>
+                <td class="num">${money(t.fba_fee)}</td>
+                <td class="num">${money(t.fuel_surcharge)}</td>
+                <td class="num" title="Seller Central placement Total charge for Transaction dates in this filter">${money(t.inbound_placement_fee)}</td>
+                <td class="num">${money(t.low_inventory_fee)}</td>
+                <td class="num">${money(t.storage_fee)}</td>
+                <td class="num">${money(t.aged_inventory_fee)}</td>
+                <td class="num" title="Account-level total — same as the 'Ad spend' KPI tile"><span class="profit-ads-blended">${money(t.ad_cost)}</span></td>
+                <td class="num">${money(t.cogs_total)}</td>
+                <td class="num">${money(t.return_processing_fee)}</td>
+                <td class="num" title="Seller Central Removal Order Detail total for request-dates in this filter">${money(t.removal_fee)}</td>
+                <td class="num ${marginClass(t.margin)}">${money(t.net)}</td>
+                <td class="num ${marginClass(t.margin)}">${t.margin}%</td>
+              </tr>`;
+          }
+        }
+
+        // Only show real warnings/errors — never methodology text.
+        const caveats = [];
+        for (const w of data.warnings || []) {
+          caveats.push(`<span class="profit-warning">${escapeHtml(w)}</span>`);
+        }
+        if ((data.fee_errors || []).length) {
+          caveats.push(`Fees API failed for ${data.fee_errors.length} SKU(s).`);
+        }
+        if ((data.fetch_errors || []).length) {
+          caveats.push(`${data.fetch_errors.length} order(s) failed to fetch.`);
+        }
+        if (caveats.length) {
+          profitCaveatsEl.innerHTML = `<ul style="margin:0 0 0 18px;padding:0;">${caveats.map(c => `<li>${c}</li>`).join('')}</ul>`;
+          profitCaveatsEl.classList.add('visible');
+        } else {
+          profitCaveatsEl.classList.remove('visible');
+        }
+      } catch (err) {
+        profitBodyEl.innerHTML = `<tr><td colspan="18" style="padding:20px;color:#c62828;">Failed to load: ${escapeHtml(String(err))}</td></tr>`;
+      } finally {
+        profitRefreshBtn.disabled = false;
+      }
+    }
+    profitRefreshBtn.addEventListener('click', loadProfitability);
+
+    // ── Avg-price drill-down: per-line-item price detail modal ────────
+    async function openPricesModal(sku) {
+      const start = profitStartEl.value;
+      const end = profitEndEl.value;
+      let existing = document.getElementById('prices-modal');
+      if (existing) existing.remove();
+      const modal = document.createElement('div');
+      modal.id = 'prices-modal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+      modal.innerHTML = `
+        <div style="background:#fff;border-radius:8px;max-width:900px;width:95%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;">
+          <div style="padding:14px 20px;background:#4a6cf7;color:#fff;display:flex;justify-content:space-between;align-items:center;">
+            <div><strong>Price detail — ${escapeHtml(sku)}</strong> <span style="opacity:0.8;font-size:12px;">${escapeHtml(start)} → ${escapeHtml(end)}</span></div>
+            <button id="prices-modal-close" style="background:transparent;border:0;color:#fff;font-size:22px;cursor:pointer;">×</button>
+          </div>
+          <div id="prices-modal-body" style="padding:16px 20px;overflow:auto;">Loading…</div>
+        </div>`;
+      document.body.appendChild(modal);
+      modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+      document.getElementById('prices-modal-close').addEventListener('click', () => modal.remove());
+      const bodyEl = document.getElementById('prices-modal-body');
+      try {
+        const qs = new URLSearchParams({ start, end }).toString();
+        const r = await fetch(`/profitability/sku/${encodeURIComponent(sku)}/prices?${qs}`, { headers: authHeaders() });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        const money = v => `$${(Number(v) || 0).toLocaleString(undefined, {maximumFractionDigits: 2})}`;
+        const dateFmt = iso => iso ? new Date(iso).toISOString().slice(0, 10) : '—';
+        const summary = `
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px;font-size:12px;">
+            <div><span style="color:#6b7280;">Line items</span><br><strong>${data.line_count}</strong></div>
+            <div><span style="color:#6b7280;">Total units</span><br><strong>${data.total_units}</strong></div>
+            <div><span style="color:#6b7280;">Net revenue</span><br><strong>${money(data.total_net_revenue)}</strong></div>
+            <div><span style="color:#6b7280;">Avg price</span><br><strong>${money(data.avg_price)}</strong></div>
+            <div><span style="color:#6b7280;">Min price</span><br><strong>${money(data.min_price)}</strong></div>
+            <div><span style="color:#6b7280;">Max price</span><br><strong>${money(data.max_price)}</strong></div>
+          </div>`;
+        const rows = data.lines.map(l => `
+          <tr>
+            <td>${dateFmt(l.purchase_date)}</td>
+            <td><code style="font-size:11px;">${escapeHtml(l.amazon_order_id || '—')}</code></td>
+            <td>${escapeHtml(l.order_status || '—')}</td>
+            <td class="num">${l.qty}</td>
+            <td class="num">${money(l.gross_line)}</td>
+            <td class="num" style="color:${l.promo_discount > 0 ? '#c62828' : '#999'};">${l.promo_discount > 0 ? '−' + money(l.promo_discount) : '—'}</td>
+            <td class="num"><strong>${money(l.net_line)}</strong></td>
+            <td class="num"><strong>${money(l.unit_price)}</strong></td>
+            <td style="font-size:11px;color:#6b7280;">${escapeHtml(l.ship_to || '—')}</td>
+          </tr>`).join('');
+        bodyEl.innerHTML = summary + (data.lines.length ? `
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead><tr style="background:#f9fafb;">
+              <th style="text-align:left;padding:6px;border-bottom:1px solid #e5e7eb;">Date</th>
+              <th style="text-align:left;padding:6px;border-bottom:1px solid #e5e7eb;">Order</th>
+              <th style="text-align:left;padding:6px;border-bottom:1px solid #e5e7eb;">Status</th>
+              <th style="text-align:right;padding:6px;border-bottom:1px solid #e5e7eb;">Qty</th>
+              <th style="text-align:right;padding:6px;border-bottom:1px solid #e5e7eb;">Gross</th>
+              <th style="text-align:right;padding:6px;border-bottom:1px solid #e5e7eb;">Promo</th>
+              <th style="text-align:right;padding:6px;border-bottom:1px solid #e5e7eb;">Net line</th>
+              <th style="text-align:right;padding:6px;border-bottom:1px solid #e5e7eb;">Unit price</th>
+              <th style="text-align:left;padding:6px;border-bottom:1px solid #e5e7eb;">Ship to</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>` : '<div style="color:#888;padding:20px;text-align:center;">No line items in this window.</div>');
+      } catch (err) {
+        bodyEl.innerHTML = `<div style="color:#c62828;">Failed to load: ${escapeHtml(String(err))}</div>`;
+      }
+    }
+    profitBodyEl.addEventListener('click', (e) => {
+      const a = e.target.closest('.profit-price-link');
+      if (a) {
+        e.preventDefault();
+        openPricesModal(a.dataset.sku);
+        return;
+      }
+      const cogsCell = e.target.closest('.profit-cogs-cell');
+      if (cogsCell && !cogsCell.classList.contains('editing')) {
+        openProfitCogsEditor(cogsCell);
+      }
+    });
+
+    function openProfitCogsEditor(cell) {
+      const sku = cell.dataset.sku;
+      const unitCost = cell.dataset.unitCost !== '' ? parseFloat(cell.dataset.unitCost) : '';
+      const inbound = cell.dataset.inboundPerUnit !== '' ? parseFloat(cell.dataset.inboundPerUnit) : '';
+      const originalHTML = cell.innerHTML;
+      cell.classList.add('editing');
+      cell.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:3px;align-items:stretch;min-width:110px;">
+          <input type="number" class="pcogs-unit"    step="0.01" min="0.01" placeholder="Unit $" value="${unitCost}" style="width:100%;padding:2px 4px;font-size:11px;">
+          <input type="number" class="pcogs-inbound" step="0.01" min="0"    placeholder="Ship $/unit" value="${inbound}" style="width:100%;padding:2px 4px;font-size:11px;">
+          <div style="display:flex;gap:3px;">
+            <button type="button" class="pcogs-save" style="flex:1;font-size:11px;padding:2px;">Save</button>
+            <button type="button" class="pcogs-cancel" style="flex:1;font-size:11px;padding:2px;">Cancel</button>
+          </div>
+        </div>`;
+      const unitInp = cell.querySelector('.pcogs-unit');
+      unitInp.focus();
+      unitInp.select();
+      const restore = () => {
+        cell.classList.remove('editing');
+        cell.innerHTML = originalHTML;
+      };
+      cell.querySelector('.pcogs-cancel').addEventListener('click', restore);
+      cell.querySelector('.pcogs-save').addEventListener('click', async () => {
+        const unit_cost = parseFloat(cell.querySelector('.pcogs-unit').value);
+        const inbound_shipping_per_unit = parseFloat(cell.querySelector('.pcogs-inbound').value || 0);
+        if (!(unit_cost > 0)) {
+          alert('Unit cost must be > 0');
+          return;
+        }
+        try {
+          const r = await fetch(`/cogs/${encodeURIComponent(sku)}`, {
+            method: 'PUT',
+            headers: authHeaders({ 'content-type': 'application/json' }),
+            body: JSON.stringify({ unit_cost, inbound_shipping_per_unit }),
+          });
+          const j = await r.json();
+          if (j.error) throw new Error(j.error);
+          await loadProfitability();
+        } catch (err) {
+          alert(`Save failed: ${err.message || err}`);
+          restore();
+        }
+      });
+      cell.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') restore();
+        if (e.key === 'Enter') cell.querySelector('.pcogs-save').click();
+      });
+    }
+
+    // ── COGS editor ─────────────────────────────────────
+    let cogsFlashTimer = null;
+    function cogsFlash(msg, isError = false) {
+      cogsStatusEl.textContent = msg;
+      cogsStatusEl.style.color = isError ? '#b71c1c' : '#2e7d32';
+      if (cogsFlashTimer) clearTimeout(cogsFlashTimer);
+      cogsFlashTimer = setTimeout(() => { cogsStatusEl.textContent = ''; }, 3000);
+    }
+
+    async function loadCogs() {
+      cogsBodyEl.innerHTML = '<tr><td colspan="5" style="padding:20px;color:#888;">Loading…</td></tr>';
+      cogsEmptyEl.style.display = 'none';
+      try {
+        const r = await fetch('/cogs', { headers: authHeaders() });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        cogsStampEl.textContent = `${data.count} SKU(s) with COGS`;
+        renderCogsRows(data.rows || []);
+      } catch (err) {
+        cogsBodyEl.innerHTML = `<tr><td colspan="5" style="padding:20px;color:#c62828;">Failed to load: ${escapeHtml(String(err))}</td></tr>`;
+      }
+    }
+
+    function renderCogsRows(rows) {
+      if (!rows.length) {
+        cogsBodyEl.innerHTML = '';
+        cogsEmptyEl.style.display = 'block';
+        return;
+      }
+      cogsEmptyEl.style.display = 'none';
+      cogsBodyEl.innerHTML = rows.map(r => `
+        <tr data-sku="${escapeHtml(r.sku)}">
+          <td><strong>${escapeHtml(r.sku)}</strong></td>
+          <td class="num"><input type="number" step="0.01" min="0.01" data-field="unit_cost" value="${r.unit_cost ?? ''}"></td>
+          <td class="num"><input type="number" step="0.01" min="0"    data-field="inbound_shipping_per_unit" value="${r.inbound_shipping_per_unit ?? 0}"></td>
+          <td style="color:#888; font-size:12px;">${r.updated_at ? new Date(r.updated_at).toLocaleString() : '—'}</td>
+          <td><button class="cogs-delete" type="button">Delete</button></td>
+        </tr>
+      `).join('');
+
+      // Autosave on blur — one PUT per row edit. Only fires when the value
+      // actually changed, so tabbing through the table doesn't spam writes.
+      cogsBodyEl.querySelectorAll('input').forEach(inp => {
+        inp.dataset.original = inp.value;
+        inp.addEventListener('blur', () => saveCogsInput(inp));
+        inp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
+        });
+      });
+      cogsBodyEl.querySelectorAll('.cogs-delete').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const sku = btn.closest('tr').dataset.sku;
+          if (confirm(`Delete COGS row for ${sku}?`)) deleteCogsRow(sku);
+        });
+      });
+    }
+
+    async function saveCogsInput(inp) {
+      if (inp.value === inp.dataset.original) return;
+      const tr = inp.closest('tr');
+      const sku = tr.dataset.sku;
+      const unit_cost = parseFloat(tr.querySelector('input[data-field="unit_cost"]').value);
+      const inbound_shipping_per_unit = parseFloat(tr.querySelector('input[data-field="inbound_shipping_per_unit"]').value || 0);
+      if (!(unit_cost > 0)) {
+        cogsFlash(`${sku}: unit_cost must be > 0`, true);
+        inp.value = inp.dataset.original;
+        return;
+      }
+      try {
+        const r = await fetch(`/cogs/${encodeURIComponent(sku)}`, {
+          method: 'PUT',
+          headers: authHeaders({ 'content-type': 'application/json' }),
+          body: JSON.stringify({ unit_cost, inbound_shipping_per_unit }),
+        });
+        const j = await r.json();
+        if (j.error) throw new Error(j.error);
+        inp.dataset.original = inp.value;
+        cogsFlash(`Saved ${sku}`);
+      } catch (err) {
+        cogsFlash(`${sku}: ${err.message || err}`, true);
+        inp.value = inp.dataset.original;
+      }
+    }
+
+    async function deleteCogsRow(sku) {
+      try {
+        const r = await fetch(`/cogs/${encodeURIComponent(sku)}`, {
+          method: 'DELETE', headers: authHeaders(),
+        });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        cogsFlash(`Removed ${sku}`);
+        loadCogs();
+      } catch (err) {
+        cogsFlash(`Delete failed: ${err.message || err}`, true);
+      }
+    }
+
+    cogsAddForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const sku = cogsAddSkuEl.value.trim();
+      const unit_cost = parseFloat(cogsAddCostEl.value);
+      const inbound_shipping_per_unit = parseFloat(cogsAddShipEl.value || 0);
+      if (!sku || !(unit_cost > 0)) { cogsFlash('SKU + positive unit cost required', true); return; }
+      try {
+        const r = await fetch(`/cogs/${encodeURIComponent(sku)}`, {
+          method: 'PUT',
+          headers: authHeaders({ 'content-type': 'application/json' }),
+          body: JSON.stringify({ unit_cost, inbound_shipping_per_unit }),
+        });
+        const j = await r.json();
+        if (j.error) throw new Error(j.error);
+        cogsFlash(`Saved ${sku}`);
+        cogsAddSkuEl.value = ''; cogsAddCostEl.value = ''; cogsAddShipEl.value = '';
+        loadCogs();
+      } catch (err) {
+        cogsFlash(`${sku}: ${err.message || err}`, true);
+      }
+    });
+
+    // ── Keyword Matrix ──────────────────────────────────
+    const KW_STEPS = [
+      { key: 'sourcing',         label: 'Sourcing' },
+      { key: 'brand_analytics',  label: 'Brand Analytics' },
+      { key: 'cpc',              label: 'CPC' },
+      { key: 'scoring',          label: 'Scoring' },
+      { key: 'done',             label: 'Done' },
+    ];
+
+    function fmtKwNum(v, digits = 2) {
+      if (v === null || v === undefined) return '—';
+      return Number(v).toFixed(digits);
+    }
+    function fmtKwPct(v) {
+      if (v === null || v === undefined) return '—';
+      return `${(Number(v) * 100).toFixed(1)}%`;
+    }
+    function fmtKwSfr(v) {
+      if (v === null || v === undefined) return '—';
+      return Math.round(v).toLocaleString();
+    }
+
+    function renderKwStepper(currentStep, status) {
+      const parts = [];
+      let currentIdx = KW_STEPS.findIndex(s => s.key === currentStep);
+      if (currentIdx < 0) currentIdx = 0;
+      KW_STEPS.forEach((step, i) => {
+        let cls = 'kw-step';
+        if (status === 'done') cls += ' done';
+        else if (i < currentIdx) cls += ' done';
+        else if (i === currentIdx) cls += ' active';
+        parts.push(`<span class="${cls}">${step.label}</span>`);
+        if (i < KW_STEPS.length - 1) parts.push(`<span class="kw-step-arrow">›</span>`);
+      });
+      kwStepperEl.innerHTML = parts.join('');
+      kwStepperEl.style.display = 'flex';
+    }
+
+    function renderKwSourceStrip(sources) {
+      if (!sources) return;
+      const order = ['amazon_asin', 'meta', 'amazon_searchbar'];
+      const html = order.map(key => {
+        const s = sources[key];
+        if (!s) return '';
+        const cov = s.ba_coverage;
+        const covLine = cov
+          ? `<div>Brand Analytics: <b>${cov.in_report}/${cov.total}</b> matched</div>`
+          : '';
+        const notes = (s.notes || []).map(n => `<div class="kw-note">• ${n}</div>`).join('');
+        return `
+          <div class="kw-source-card">
+            <h4>${s.label}</h4>
+            <div>Raw keywords: <b>${s.raw_count}</b></div>
+            <div>Scorable: <b>${s.scorable_count}</b></div>
+            ${covLine}
+            ${notes}
+          </div>`;
+      }).join('');
+      kwStripEl.innerHTML = html;
+      kwStripEl.style.display = 'grid';
+    }
+
+    function renderKwCell(entries) {
+      if (!entries || entries.length === 0) {
+        return `<div class="kw-cell-empty">— no keywords —</div>`;
+      }
+      return entries.map(e => {
+        const kw = e.keyword || '';
+        return `
+          <div class="kw-cell-item">
+            <div class="kw-cell-kw">${kw}</div>
+            <div class="kw-cell-metrics">
+              <span>SFR <b>${fmtKwSfr(e.sfr)}</b></span>
+              <span>Click <b>${fmtKwPct(e.click_share)}</b></span>
+              <span>Conv <b>${fmtKwPct(e.conversion_share)}</b></span>
+              <span>CPC <b>${e.cpc == null ? '—' : '$' + fmtKwNum(e.cpc)}</b></span>
+              <span>Score <b>${fmtKwNum(e.composite)}</b></span>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function renderKwMatrix(matrix) {
+      if (!matrix) {
+        kwMatrixEl.style.display = 'none';
+        return;
+      }
+      const cols = matrix.cols || [];
+      const labels = matrix.col_labels || {};
+      const cells = matrix.cells || {};
+      const tierClass = { top: 'tier-top', medium: 'tier-medium', low: 'tier-low' };
+      const head = `
+        <tr>
+          <th class="kw-tier"></th>
+          ${cols.map(c => `<th>${labels[c] || c}</th>`).join('')}
+        </tr>`;
+      const rows = ['top', 'medium', 'low'].map(tier => `
+        <tr>
+          <th class="kw-tier ${tierClass[tier]}">${tier}</th>
+          ${cols.map(c => `<td>${renderKwCell((cells[tier] || {})[c])}</td>`).join('')}
+        </tr>`).join('');
+      kwMatrixEl.innerHTML = `<table><thead>${head}</thead><tbody>${rows}</tbody></table>`;
+      kwMatrixEl.style.display = 'block';
+    }
+
+    async function pollKwJob(jobId) {
+      try {
+        const r = await fetch(`/keyword-matrix/${encodeURIComponent(jobId)}`, {
+          headers: authHeaders(),
+        });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const job = await r.json();
+        renderKwStepper(job.step, job.status);
+        const adGroupNote = job.ad_group_id && job.campaign_id
+          ? ` — ad group ${job.ad_group_id} (${job.ad_group_source || 'user'})`
+          : '';
+        kwStatusEl.textContent = (job.status === 'done'
+          ? 'Done.'
+          : `Running (${job.step})…`) + adGroupNote;
+        if (job.matrix) renderKwSourceStrip(job.matrix.sources);
+        if (job.status === 'done') {
+          renderKwMatrix(job.matrix);
+          kwRunBtn.disabled = false;
+          if (kwPollTimer) { clearTimeout(kwPollTimer); kwPollTimer = null; }
+          return;
+        }
+        if (job.status === 'error') {
+          kwErrorEl.textContent = job.error || 'Job failed.';
+          kwErrorEl.style.display = 'block';
+          kwStatusEl.textContent = 'Error.';
+          kwRunBtn.disabled = false;
+          if (kwPollTimer) { clearTimeout(kwPollTimer); kwPollTimer = null; }
+          return;
+        }
+        kwPollTimer = setTimeout(() => pollKwJob(jobId), 1200);
+      } catch (err) {
+        kwErrorEl.textContent = err.message || String(err);
+        kwErrorEl.style.display = 'block';
+        kwRunBtn.disabled = false;
+      }
+    }
+
+    async function runKwJob() {
+      const asins = kwAsinsEl.value
+        .split(/[,\s]+/)
+        .map(s => s.trim())
+        .filter(Boolean);
+      if (asins.length === 0) {
+        kwErrorEl.textContent = 'Enter at least one ASIN.';
+        kwErrorEl.style.display = 'block';
+        return;
+      }
+      kwErrorEl.style.display = 'none';
+      kwErrorEl.textContent = '';
+      kwMatrixEl.style.display = 'none';
+      kwStripEl.style.display = 'none';
+      kwRunBtn.disabled = true;
+      kwStatusEl.textContent = 'Starting…';
+      if (kwPollTimer) { clearTimeout(kwPollTimer); kwPollTimer = null; }
+      const ad_group_id = kwAdgroupEl.value.trim() || null;
+      const campaign_id = kwCampaignEl.value.trim() || null;
+      try {
+        const r = await fetch('/keyword-matrix/start', {
+          method: 'POST',
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ asins, ad_group_id, campaign_id }),
+        });
+        if (!r.ok) {
+          const j = await r.json().catch(() => ({}));
+          throw new Error(j.detail || `HTTP ${r.status}`);
+        }
+        const j = await r.json();
+        pollKwJob(j.job_id);
+      } catch (err) {
+        kwErrorEl.textContent = err.message || String(err);
+        kwErrorEl.style.display = 'block';
+        kwRunBtn.disabled = false;
+        kwStatusEl.textContent = '';
+      }
+    }
+    kwRunBtn.addEventListener('click', runKwJob);
+    kwAsinsEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter') runKwJob();
+    });
+
+    // ── SKU drawer ──────────────────────────────────────
+    const drawerEl = document.getElementById('sku-drawer');
+    const drawerOverlay = document.getElementById('sku-drawer-overlay');
+    const drawerTitle = document.getElementById('sku-drawer-title');
+    const drawerKV = document.getElementById('sku-kv');
+    const chartCanvas = document.getElementById('sku-chart');
+
+    function closeDrawer() {
+      drawerEl.classList.remove('visible');
+      drawerOverlay.classList.remove('visible');
+    }
+    document.getElementById('sku-drawer-close').addEventListener('click', closeDrawer);
+    drawerOverlay.addEventListener('click', closeDrawer);
+
+    // ── Product Settings modal ────────────────────────────────────
+    const settingsOverlay = document.getElementById('settings-modal-overlay');
+    const settingsBody = document.getElementById('settings-body');
+    const settingsTitle = document.getElementById('settings-modal-title');
+    const settingsTabsEl = document.getElementById('settings-tabs');
+    const settingsSaveBtn = document.getElementById('settings-save-btn');
+    let settingsState = { sku: null, tab: 'mfg', settings: {}, windows: [] };
+
+    function closeSettingsModal() {
+      settingsOverlay.classList.remove('visible');
+      settingsState = { sku: null, tab: 'mfg', settings: {}, windows: [] };
+    }
+    document.getElementById('settings-close-btn').addEventListener('click', closeSettingsModal);
+    document.getElementById('settings-cancel-btn').addEventListener('click', closeSettingsModal);
+    settingsOverlay.addEventListener('click', (ev) => {
+      if (ev.target === settingsOverlay) closeSettingsModal();
+    });
+
+    settingsTabsEl.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        settingsState.tab = btn.dataset.tab;
+        settingsTabsEl.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+        renderSettingsTab();
+      });
+    });
+
+    async function openProductSettingsModal(sku) {
+      settingsState.sku = sku;
+      settingsState.tab = 'mfg';
+      settingsTitle.textContent = `Product Settings — ${sku}`;
+      settingsTabsEl.querySelectorAll('button').forEach(b =>
+        b.classList.toggle('active', b.dataset.tab === 'mfg'));
+      settingsBody.innerHTML = '<div style="padding:20px;color:#64748b;">Loading…</div>';
+      settingsOverlay.classList.add('visible');
+      try {
+        const r = await fetch(`/product-settings/${encodeURIComponent(sku)}`, { headers: authHeaders() });
+        const data = await r.json();
+        settingsState.settings = data.settings || {};
+        settingsState.windows = data.velocity_windows || [];
+        renderSettingsTab();
+      } catch (e) {
+        settingsBody.innerHTML = `<div style="padding:20px;color:#dc2626;">Error loading settings: ${escapeHtml(e.message)}</div>`;
+      }
+    }
+
+    function renderSettingsTab() {
+      const s = settingsState.settings;
+      const tab = settingsState.tab;
+      if (tab === 'mfg') {
+        settingsBody.innerHTML = `
+          <div class="settings-row">
+            <label>Manufacturing time (days)</label>
+            <input type="number" min="0" data-field="manufacturing_time_days" value="${s.manufacturing_time_days ?? 35}">
+          </div>
+          <div class="settings-row">
+            <label><input type="checkbox" data-field="use_prep_center" ${s.use_prep_center ? 'checked' : ''}> I use a Prep Center</label>
+            <div class="field-hint">Adds shipping-to-prep days to the lead-time build-up</div>
+          </div>
+          <div class="settings-row">
+            <label>Shipping to Prep Center (days)</label>
+            <input type="number" min="0" data-field="shipping_to_prep_days" value="${s.shipping_to_prep_days ?? 0}">
+          </div>
+          <div class="settings-row">
+            <label>Shipping to FBA (days)</label>
+            <input type="number" min="0" data-field="shipping_to_fba_days" value="${s.shipping_to_fba_days ?? ''}" placeholder="default: 10 (air)">
+          </div>
+          <div class="settings-row">
+            <label>FBA buffer (days)</label>
+            <input type="number" min="0" data-field="fba_buffer_days" value="${s.fba_buffer_days ?? 0}">
+          </div>
+          <div class="settings-row">
+            <label>Target stock range after new order (days)</label>
+            <input type="number" min="1" data-field="target_stock_days" value="${s.target_stock_days ?? ''}" placeholder="default: uses global setting">
+          </div>
+          <div class="settings-row">
+            <label>Comment</label>
+            <textarea rows="2" data-field="comment" placeholder="Freeform notes (surfaces in the Comment column)">${escapeHtml(s.comment || '')}</textarea>
+          </div>
+        `;
+      } else if (tab === 'forecast') {
+        // Fixed weights for now — SellerBoard-style, same for every SKU.
+        // Stored per-SKU overrides are ignored so nobody sees a different
+        // number for the same product; inputs are read-only until we ship
+        // a proper "customize weights" flow.
+        const DEFAULT_VELOCITY_WEIGHTS = { d3: 0.5, d7: 0.3, d30: 0.2, d60: 0, d180: 0 };
+        const rows = settingsState.windows.map(w => {
+          const wKey = 'd' + w.period_days;
+          const value = DEFAULT_VELOCITY_WEIGHTS[wKey] ?? 0;
+          return `
+            <tr>
+              <td>${w.period_days}</td>
+              <td>${w.days_in_stock}</td>
+              <td>${w.units_sold.toLocaleString()}</td>
+              <td>${w.velocity.toFixed(2)}</td>
+              <td><input type="number" data-weight="${wKey}" value="${value}" readonly disabled title="Weights are locked to the platform default"></td>
+            </tr>`;
+        }).join('');
+        settingsBody.innerHTML = `
+          <h4>Adjusted sales velocity parameters</h4>
+          <table class="velocity-table">
+            <thead>
+              <tr><th>Period (days)</th><th>Days in stock</th><th>Units sold</th><th>Velocity</th><th>Weight</th></tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <div class="weighted-summary">
+            Weighted velocity (units per day): <strong id="weighted-velocity-display">—</strong>
+            <div class="field-hint" style="color:#3730a3;">Out-of-stock days are ignored when calculating sales velocity. Weights are normalized — leave all at 0 to fall back to the Prophet forecast.</div>
+          </div>
+        `;
+        settingsBody.querySelectorAll('input[data-weight]').forEach(inp => {
+          inp.addEventListener('input', updateWeightedVelocity);
+        });
+        updateWeightedVelocity();
+      } else if (tab === 'shipping') {
+        const p = s.packing || {};
+        settingsBody.innerHTML = `
+          <div class="settings-row">
+            <label>Packing template name</label>
+            <input type="text" data-packing="template_name" value="${escapeHtml(p.template_name || '')}">
+          </div>
+          <div class="settings-row">
+            <label>Units per box</label>
+            <input type="number" min="1" data-packing="units_per_box" value="${p.units_per_box ?? ''}">
+          </div>
+          <div class="settings-row">
+            <label>Box length (in)</label>
+            <input type="number" min="0" step="0.1" data-packing="box_length_in" value="${p.box_length_in ?? ''}">
+          </div>
+          <div class="settings-row">
+            <label>Box width (in)</label>
+            <input type="number" min="0" step="0.1" data-packing="box_width_in" value="${p.box_width_in ?? ''}">
+          </div>
+          <div class="settings-row">
+            <label>Box height (in)</label>
+            <input type="number" min="0" step="0.1" data-packing="box_height_in" value="${p.box_height_in ?? ''}">
+          </div>
+          <div class="settings-row">
+            <label>Box weight (lb)</label>
+            <input type="number" min="0" step="0.1" data-packing="box_weight_lb" value="${p.box_weight_lb ?? ''}">
+          </div>
+          <div class="settings-row">
+            <label>Measurement system</label>
+            <select data-packing="measurement_system">
+              <option value="imperial" ${(p.measurement_system || 'imperial') === 'imperial' ? 'selected' : ''}>Imperial</option>
+              <option value="metric" ${p.measurement_system === 'metric' ? 'selected' : ''}>Metric</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <label>Prep by</label>
+            <select data-packing="prep_by">
+              <option value="">Select option</option>
+              <option value="seller" ${p.prep_by === 'seller' ? 'selected' : ''}>Seller</option>
+              <option value="amazon" ${p.prep_by === 'amazon' ? 'selected' : ''}>Amazon</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <label>Who labels units</label>
+            <select data-packing="labeled_by">
+              <option value="">Select option</option>
+              <option value="seller" ${p.labeled_by === 'seller' ? 'selected' : ''}>Seller</option>
+              <option value="amazon" ${p.labeled_by === 'amazon' ? 'selected' : ''}>Amazon</option>
+            </select>
+          </div>
+        `;
+      } else if (tab === 'po') {
+        const sup = s.supplier || {};
+        settingsBody.innerHTML = `
+          <div class="settings-row">
+            <label>Supplier color</label>
+            <input type="text" data-supplier="color" value="${escapeHtml(sup.color || '')}">
+          </div>
+          <div class="settings-row">
+            <label>Supplier size</label>
+            <input type="text" data-supplier="size" value="${escapeHtml(sup.size || '')}">
+          </div>
+          <div class="settings-row">
+            <label>Supplier item number</label>
+            <input type="text" data-supplier="item_number" value="${escapeHtml(sup.item_number || '')}">
+          </div>
+          <div class="settings-row">
+            <label>Supplier multipack size</label>
+            <input type="number" min="1" data-supplier="multipack_size" value="${sup.multipack_size ?? ''}">
+          </div>
+          <div class="settings-row">
+            <label>Supplier SKU/MPN</label>
+            <input type="text" data-supplier="sku_mpn" value="${escapeHtml(sup.sku_mpn || '')}">
+          </div>
+        `;
+      }
+    }
+
+    function updateWeightedVelocity() {
+      const inputs = settingsBody.querySelectorAll('input[data-weight]');
+      let num = 0, denom = 0;
+      settingsState.windows.forEach((w, i) => {
+        const wt = parseFloat(inputs[i]?.value || 0);
+        if (wt > 0) { num += wt * w.velocity; denom += wt; }
+      });
+      const el = document.getElementById('weighted-velocity-display');
+      if (el) el.textContent = denom > 0 ? (num / denom).toFixed(2) : '—';
+    }
+
+    // Snapshot whatever's currently in the DOM for the *active* tab into
+    // settingsState.settings — called on tab-switch and on save so users
+    // can flip between tabs without losing edits.
+    function captureCurrentTab() {
+      const s = settingsState.settings;
+      const tab = settingsState.tab;
+      if (tab === 'mfg') {
+        settingsBody.querySelectorAll('[data-field]').forEach(el => {
+          const key = el.dataset.field;
+          if (el.type === 'checkbox') s[key] = el.checked;
+          else if (el.type === 'number') s[key] = el.value === '' ? null : parseFloat(el.value);
+          else s[key] = el.value;
+        });
+      } else if (tab === 'forecast') {
+        // Weights are locked to the platform default and read-only in the
+        // UI — skip persisting anything so previously saved per-SKU
+        // overrides get cleared on the next save-through as well.
+        s.velocity_weights = null;
+      } else if (tab === 'shipping') {
+        const p = { ...(s.packing || {}) };
+        settingsBody.querySelectorAll('[data-packing]').forEach(el => {
+          const key = el.dataset.packing;
+          if (el.type === 'number') p[key] = el.value === '' ? null : parseFloat(el.value);
+          else p[key] = el.value;
+        });
+        s.packing = p;
+      } else if (tab === 'po') {
+        const sup = { ...(s.supplier || {}) };
+        settingsBody.querySelectorAll('[data-supplier]').forEach(el => {
+          const key = el.dataset.supplier;
+          if (el.type === 'number') sup[key] = el.value === '' ? null : parseFloat(el.value);
+          else sup[key] = el.value;
+        });
+        s.supplier = sup;
+      }
+    }
+
+    // Wrap the tab-switch handler so we snapshot before rendering the new tab
+    // (attached above; re-bind here to intercept)
+    settingsTabsEl.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => captureCurrentTab(), true);
+    });
+
+    settingsSaveBtn.addEventListener('click', async () => {
+      captureCurrentTab();
+      settingsSaveBtn.disabled = true;
+      settingsSaveBtn.textContent = 'Saving…';
+      try {
+        const r = await fetch(`/product-settings/${encodeURIComponent(settingsState.sku)}`, {
+          method: 'PUT',
+          headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify(settingsState.settings),
+        });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        closeSettingsModal();
+        // Reload the restock table so the new comment / weighted-velocity
+        // impact shows up. The user still needs to hit "Refresh forecasts"
+        // for the forecast math to re-run — the settings edit alone doesn't
+        // rebuild the cache.
+        if (typeof loadRestock === 'function') loadRestock();
+      } catch (e) {
+        alert(`Failed to save settings: ${e.message}`);
+      } finally {
+        settingsSaveBtn.disabled = false;
+        settingsSaveBtn.textContent = 'Apply';
+      }
+    });
+
+    async function openSkuDrawer(sku) {
+      drawerTitle.textContent = sku;
+      drawerKV.innerHTML = '<div>Loading…</div>';
+      drawerEl.classList.add('visible');
+      drawerOverlay.classList.add('visible');
+      try {
+        const r = await fetch(`/forecasting/sku/${encodeURIComponent(sku)}`, { headers: authHeaders() });
+        const data = await r.json();
+        if (data.error) {
+          drawerKV.innerHTML = `<div>${escapeHtml(data.error)}</div>`;
+          return;
+        }
+        const reorder = data.reorder || {};
+        const drivers = data.drivers || {};
+        const shipments = data.inbound_shipments || [];
+        const airTransit = reorder.air_transit_days ?? 10;
+        const oceanTransit = reorder.ocean_transit_days ?? 45;
+        const shipmentsHtml = shipments.length ? `
+          <div class="sku-shipments">
+            <div class="sku-shipments-title">In-flight shipments (${shipments.length})</div>
+            <table>
+              <thead><tr><th>Shipment</th><th>Status</th><th>Mode</th><th>Qty</th><th>ETA</th></tr></thead>
+              <tbody>
+                ${shipments.map(s => `
+                  <tr>
+                    <td>${escapeHtml(s.name || s.shipment_id || '—')}</td>
+                    <td>${escapeHtml(s.display_status || s.status || '—')}</td>
+                    <td><span class="mode-badge mode-${escapeHtml(s.mode || 'ground')}">${escapeHtml(s.mode || 'ground')}</span></td>
+                    <td class="num">${s.qty_outstanding ?? 0}</td>
+                    <td>${escapeHtml(s.eta || '—')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : `<div class="sku-shipments-empty">No in-flight inbound shipments for this SKU.</div>`;
+        drawerKV.innerHTML = `
+          <div><span>Method</span><span>${escapeHtml(data.method || '—')}</span></div>
+          <div><span>ASIN</span><span>${escapeHtml(data.asin || '—')}</span></div>
+          <div><span>Recent avg</span><span>${drivers.recent_avg ?? 0}/day</span></div>
+          <div><span>On hand</span><span>${reorder.on_hand ?? 0}</span></div>
+          <div><span>Reserved</span><span>${reorder.reserved ?? 0}</span></div>
+          <div><span>Sent to FBA</span><span>${reorder.sent_to_fba ?? 0}</span></div>
+          <div><span>Inbound working</span><span>${reorder.inbound_working ?? 0}</span></div>
+          <div><span>Unfulfillable</span><span>${reorder.unfulfillable ?? 0}</span></div>
+          <div><span>Inbound (outstanding)</span><span>${reorder.inbound ?? 0}</span></div>
+          <div><span>Days of cover</span><span>${reorder.days_of_cover ?? '—'}</span></div>
+          <div><span>Projected stockout</span><span>${reorder.stockout_date ?? 'not within horizon'}</span></div>
+          <div><span>Ship by Air (${airTransit}d transit)</span><span>${reorder.reorder_by_date_air ?? '—'}</span></div>
+          <div><span>Ship by Ocean (${oceanTransit}d transit)</span><span>${reorder.reorder_by_date_ocean ?? reorder.reorder_by_date_sea ?? '—'}</span></div>
+          <div><span>Suggested next-shipment qty</span><span>${reorder.recommended_po_qty ?? 0}</span></div>
+          <div><span>MOQ / target cover</span><span>${reorder.moq ?? 1} / ${reorder.target_cover_days ?? '?'}d</span></div>
+          ${shipmentsHtml}
+          ${(() => {
+            const bt = data.backtest;
+            if (!bt || !bt.metrics) return '';
+            const m = bt.metrics;
+            const biasSign = m.bias > 0 ? 'over-predicting' : m.bias < 0 ? 'under-predicting' : 'unbiased';
+            const mapeStr = m.mape_pct == null ? '—' : `${m.mape_pct}%`;
+            return `
+              <div class="sku-backtest" style="margin-top:12px;padding:10px;border:1px solid #e5e7eb;border-radius:6px;background:#f9fafb;">
+                <div style="font-weight:600;font-size:13px;margin-bottom:6px;">Prediction accuracy (holdout ${escapeHtml(bt.holdout_start)} → ${escapeHtml(bt.holdout_end)})</div>
+                <div style="font-size:11px;color:#6b7280;margin-bottom:8px;">
+                  Trained on ${escapeHtml(bt.train_start || '?')} → ${escapeHtml(bt.train_end)} · method: <strong>${escapeHtml(bt.method || '?')}</strong> · ${m.days_evaluated} days evaluated
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;font-size:12px;">
+                  <div><span style="color:#6b7280;">Actual</span><br><strong>${m.actual_total}</strong> units</div>
+                  <div><span style="color:#6b7280;">Predicted</span><br><strong>${m.predicted_total}</strong> units</div>
+                  <div><span style="color:#6b7280;" title="Volume accuracy: 1 − |predicted_total − actual_total| / actual_total. Measures how close the total predicted volume is to the total actual — the metric to trust when deciding order quantity.">Accuracy</span><br><strong>${m.accuracy_pct == null ? '—' : m.accuracy_pct + '%'}</strong></div>
+                  <div><span style="color:#6b7280;">MAE</span><br><strong>${m.mae}</strong> units/day</div>
+                  <div><span style="color:#6b7280;" title="Mean absolute % error — inflates on zero-heavy series. Use Accuracy above for a fair read.">MAPE</span><br><strong>${mapeStr}</strong></div>
+                  <div><span style="color:#6b7280;">Bias</span><br><strong>${m.bias > 0 ? '+' : ''}${m.bias}</strong><br><span style="font-size:10px;color:#6b7280;">(${biasSign})</span></div>
+                  <div><span style="color:#6b7280;">Coverage (p90)</span><br><strong>${m.coverage_pct}%</strong></div>
+                </div>
+              </div>`;
+          })()}
+        `;
+        // Build a continuous timeline: 90 days of historical actuals,
+        // then the 90-day forecast. We densify the history (fill missing
+        // days with 0) so the actuals trace doesn't have visual gaps
+        // wherever a SKU didn't sell that day.
+        const fc = data.forecast || [];
+        const hist = data.history || [];
+        const histByDate = new Map();
+        for (const h of hist) histByDate.set(h.date.slice(0, 10), h);
+
+        const today = new Date(); today.setUTCHours(0, 0, 0, 0);
+        const histLabels = [];
+        const actuals = [];
+        const stockoutMask = [];
+        for (let i = 90; i >= 1; i--) {
+          const d = new Date(today); d.setUTCDate(d.getUTCDate() - i);
+          const key = d.toISOString().slice(0, 10);
+          histLabels.push(key);
+          const h = histByDate.get(key);
+          actuals.push(h ? h.units : 0);
+          stockoutMask.push(h && h.stockout_corrected);
+        }
+        const fcLabels = fc.map(r => r.date.slice(0, 10));
+        const labels = histLabels.concat(fcLabels);
+
+        // Align series to the full x-axis with null padding so each line
+        // only renders on its own segment.
+        const actualsAligned = actuals.concat(new Array(fcLabels.length).fill(null));
+        const stockoutPoints = actuals.map((v, i) => stockoutMask[i] ? v : null)
+          .concat(new Array(fcLabels.length).fill(null));
+        const p50Aligned = new Array(histLabels.length).fill(null)
+          .concat(fc.map(r => r.p50));
+        const p90Aligned = new Array(histLabels.length).fill(null)
+          .concat(fc.map(r => r.p90));
+
+        // Backtest overlay: predicted p50 for the holdout window (last
+        // 30 days of history), aligned onto the same x-axis as the
+        // actuals. Renders as a dashed line so it's visually distinct
+        // from the forward forecast.
+        const btDays = (data.backtest && data.backtest.days) || [];
+        const btByDate = new Map();
+        for (const d of btDays) btByDate.set(d.date.slice(0, 10), d);
+        const btP50Aligned = histLabels
+          .map(lbl => {
+            const d = btByDate.get(lbl);
+            return d ? d.p50 : null;
+          })
+          .concat(new Array(fcLabels.length).fill(null));
+
+        if (skuChart) skuChart.destroy();
+        skuChart = new Chart(chartCanvas, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              { label: '90d actuals', data: actualsAligned,
+                borderColor: '#1a1a2e', backgroundColor: 'transparent',
+                pointRadius: 0, borderWidth: 1.5, tension: 0.15 },
+              { label: 'stockout days', data: stockoutPoints,
+                borderColor: 'transparent', backgroundColor: '#c62828',
+                pointRadius: 3, showLine: false },
+              { label: 'p90 (upper)', data: p90Aligned,
+                borderColor: '#c5d2ff', backgroundColor: 'rgba(74,108,247,0.10)',
+                fill: '-1', pointRadius: 0, borderWidth: 1 },
+              { label: 'p50 forecast', data: p50Aligned,
+                borderColor: '#4a6cf7', backgroundColor: 'rgba(74,108,247,0.05)',
+                pointRadius: 0, borderWidth: 2, tension: 0.2 },
+              { label: 'backtest predicted', data: btP50Aligned,
+                borderColor: '#f59e0b', backgroundColor: 'transparent',
+                pointRadius: 0, borderWidth: 1.5, tension: 0.2,
+                borderDash: [4, 4] },
+            ],
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            spanGaps: false,
+            plugins: {
+              legend: { display: true, labels: { font: { size: 11 } } },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => {
+                    if (ctx.dataset.label === 'stockout days') return 'stockout (excluded from training)';
+                    return `${ctx.dataset.label}: ${ctx.parsed.y}`;
+                  },
+                },
+              },
+            },
+            scales: {
+              x: { ticks: { maxTicksLimit: 10, font: { size: 10 } } },
+              y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+            },
+          },
+        });
+      } catch (err) {
+        drawerKV.innerHTML = `<div>Failed to load: ${escapeHtml(String(err))}</div>`;
+      }
+    }
+
+    // ── Init ───────────────────────────────────────────
+
+    async function startApp() {
+      userEmailEl.textContent = localStorage.getItem('user_email') || '';
+      const saved = localStorage.getItem('session_id');
+      if (saved) {
+        currentSessionId = saved;
+        await loadHistory(saved);
+      } else {
+        currentSessionId = generateId();
+        localStorage.setItem('session_id', currentSessionId);
+      }
+      await loadSessions();
+      connectWebSocket();
+      messageInput.focus();
+    }
+
+    (async () => {
+      if (!getAuthToken()) {
+        showLogin();
+      } else {
+        await startApp();
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1054 @@
+"""
+Aurora MongoDB integration — DB-first reads with SP-API fallback.
+
+Set AURORA_DATA_SOURCE=db (default) so the AI backend reads Aurora's
+synced collections (orders, products, ads, users). Missing required
+fields trigger live Amazon API calls via data_resolver.
+"""
+
+from __future__ import annotations
+
+import html
+import os
+import re
+from collections import defaultdict
+from datetime import datetime, timezone
+from typing import Any, Optional
+
+from bson import ObjectId
+
+from auth import _db
+from amazon_sp import MARKETPLACE_NAMES, resolve_marketplace
+from amazon_sp import parse_fee_detail_lines, split_bundled_fulfillment_total
+
+# Match auroraBackend dashboardMetrics — cancelled/unfulfillable orders are not sales.
+# `Pending` is also excluded: those orders aren't confirmed yet and Amazon can flip
+# them to Canceled before the buyer is charged, so counting them inflates velocity.
+CANCELLED_ORDER_STATUSES = frozenset({
+    "Canceled", "Cancelled", "Unfulfillable", "Pending", "InvoiceUnconfirmed",
+})
+
+# Re-export order helpers from aurora_orders for a single import surface.
+from aurora_orders import (  # noqa: F401
+    fetch_orders_with_items,
+    get_order_items,
+    list_orders,
+)
+
+
+def aurora_db_enabled() -> bool:
+    source = os.getenv("AURORA_DATA_SOURCE") or os.getenv("AURORA_ORDERS_SOURCE", "db")
+    return source.strip().lower() == "db"
+
+
+def _money_amount(block: Optional[dict]) -> float:
+    if not block:
+        return 0.0
+    try:
+        return float(block.get("amount") or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def is_excluded_order_status(status: Optional[str]) -> bool:
+    """True for Canceled / Cancelled / Unfulfillable / Pending — anything
+    that isn't a confirmed, revenue-recognisable sale."""
+    if not status:
+        return False
+    if status in CANCELLED_ORDER_STATUSES:
+        return True
+    return status.strip().lower() in {
+        "canceled", "cancelled", "unfulfillable", "pending", "invoiceunconfirmed",
+    }
+
+
+def line_item_sales_amount(item: dict) -> float:
+    """Net line revenue: itemSubtotal − promotionDiscount (Aurora order sync shape)."""
+    subtotal = _money_amount(item.get("itemSubtotal"))
+    promo = _money_amount(item.get("promotionDiscount"))
+    unit_price = _money_amount(item.get("itemPrice"))
+    if subtotal > 0:
+        return max(0.0, subtotal - promo)
+    if unit_price > 0:
+        # itemPrice in Aurora DB is the line total, not per-unit (orderSyncService).
+        return max(0.0, unit_price - promo)
+    return 0.0
+
+
+def aggregate_sku_metrics_from_orders(
+    order_docs: list[dict],
+) -> tuple[dict[str, dict], list[dict], int]:
+    """Build per-SKU units/revenue/fees from Aurora order line items.
+
+    Returns (sku_data, na_price_rows, orders_count).
+    referralFee / fulfillmentFee on each line item are line totals (see
+    auroraBackend orderSyncService).
+    """
+    sku_data: dict[str, dict] = defaultdict(
+        lambda: {
+            "units": 0,
+            "revenue": 0.0,
+            "asin": None,
+            "referral_total": 0.0,
+            "fba_total": 0.0,
+        }
+    )
+    na_price_rows: list[dict] = []
+    eligible_orders = 0
+
+    for doc in order_docs:
+        if is_excluded_order_status(doc.get("orderStatus")):
+            continue
+        eligible_orders += 1
+        oid = doc.get("amazonOrderId") or ""
+        for it in doc.get("orderItems") or []:
+            sku = it.get("sellerSku")
+            if not sku:
+                continue
+            qty = int(it.get("quantityOrdered") or 0)
+            amount = line_item_sales_amount(it)
+            if amount <= 0 and qty > 0:
+                na_price_rows.append({"order_id": oid, "sku": sku, "qty": qty})
+                continue
+            sku_data[sku]["units"] += qty
+            sku_data[sku]["revenue"] += amount
+            sku_data[sku]["referral_total"] += _money_amount(it.get("referralFee"))
+            sku_data[sku]["fba_total"] += _money_amount(it.get("fulfillmentFee"))
+            if not sku_data[sku]["asin"] and it.get("asin"):
+                sku_data[sku]["asin"] = it["asin"]
+
+    return sku_data, na_price_rows, eligible_orders
+
+
+async def product_fee_estimates_by_sku(user: dict, skus: list[str]) -> dict[str, dict]:
+    """Per-unit fees from Aurora `products.fees` (same source as Products page).
+
+    Products UI shows ``fees.fbaFee`` as the FBA fee — that field is the source
+    of truth for fulfillment. Profitability splits it into base FBA + fuel so
+    FBA + Fuel == Products FBA Fee.
+
+    Referral is stored as a per-unit amount at the listing price; callers should
+    scale it by revenue when the sale price differs.
+    """
+    if not skus:
+        return {}
+    seller_id = ObjectId(str(user["_id"]))
+    # Exact match first, then case-insensitive for any miss (order SKUs
+    # sometimes differ in casing from products.sku).
+    wanted = [str(s) for s in skus if s]
+    wanted_lower = {s.lower(): s for s in wanted}
+    cursor = _db().products.find(
+        {"sellerId": seller_id, "sku": {"$in": wanted}},
+        {"sku": 1, "asin": 1, "fees": 1, "price": 1},
+    )
+    out: dict[str, dict] = {}
+    found_lower: set[str] = set()
+
+    def _pack(sku: str, doc: dict) -> dict | None:
+        fees = doc.get("fees") or {}
+        price = _money_amount((doc.get("price") or {}))
+        breakdown = fees.get("breakdown") or []
+        stored_fba = _money_amount(fees.get("fbaFee"))
+        referral = _money_amount(fees.get("referralFee"))
+        total = _money_amount(fees.get("totalFees"))
+
+        # Referral: prefer stored field (Products column); else breakdown / estimate.
+        if referral <= 0 and breakdown:
+            referral = float(parse_fee_detail_lines(breakdown).get("referral") or 0)
+        if referral <= 0 and total > 0 and stored_fba > 0:
+            referral = max(total - stored_fba, 0.0)
+        elif referral <= 0 and price > 0:
+            referral = price * 0.15
+
+        # Fulfillment: Products page displays fees.fbaFee — keep that total.
+        # Split into base + fuel for Profitability's two columns.
+        fba = 0.0
+        fuel = 0.0
+        if stored_fba > 0:
+            if breakdown:
+                parsed = parse_fee_detail_lines(breakdown)
+                p_fba = float(parsed.get("fba") or 0)
+                p_fuel = float(parsed.get("fuel_surcharge") or 0)
+                if p_fba > 0 and abs((p_fba + p_fuel) - stored_fba) <= 0.02:
+                    fba, fuel = p_fba, p_fuel
+                else:
+                    fba, fuel = split_bundled_fulfillment_total(stored_fba)
+            else:
+                fba, fuel = split_bundled_fulfillment_total(stored_fba)
+        elif breakdown:
+            parsed = parse_fee_detail_lines(breakdown)
+            fba = float(parsed.get("fba") or 0)
+            fuel = float(parsed.get("fuel_surcharge") or 0)
+        if referral <= 0 and fba <= 0 and fuel <= 0:
+            return None
+        return {
+            "referral_per_unit": referral,
+            "fba_per_unit": fba,
+            "fuel_per_unit": fuel,
+            # Full Products-page FBA fee (base+fuel) for diagnostics / UI parity.
+            "fulfillment_per_unit": round(fba + fuel, 4) if (fba + fuel) > 0 else stored_fba,
+            "listing_price": price,
+            "asin": doc.get("asin"),
+        }
+
+    async for doc in cursor:
+        sku = doc.get("sku")
+        if not sku:
+            continue
+        packed = _pack(str(sku), doc)
+        if not packed:
+            continue
+        # Key by the order SKU spelling when casings differ.
+        order_sku = wanted_lower.get(str(sku).lower(), str(sku))
+        out[order_sku] = packed
+        if order_sku != str(sku):
+            out[str(sku)] = packed
+        found_lower.add(str(sku).lower())
+
+    missing = [s for s in wanted if s.lower() not in found_lower]
+    if missing:
+        # Case-insensitive fallback query for remaining SKUs.
+        or_clauses = [{"sku": {"$regex": f"^{re.escape(s)}$", "$options": "i"}} for s in missing]
+        async for doc in _db().products.find(
+            {"sellerId": seller_id, "$or": or_clauses},
+            {"sku": 1, "asin": 1, "fees": 1, "price": 1},
+        ):
+            sku = doc.get("sku")
+            if not sku:
+                continue
+            packed = _pack(str(sku), doc)
+            if not packed:
+                continue
+            order_sku = wanted_lower.get(str(sku).lower(), str(sku))
+            out[order_sku] = packed
+            out[str(sku)] = packed
+
+    return out
+
+
+async def fba_returns_by_sku(
+    user: dict,
+    start: datetime,
+    end: datetime,
+) -> dict[str, dict]:
+    """Per-SKU returned/refunded units for orders PURCHASED in [start, end].
+
+    Matches the Aurora Returned Orders tab:
+      - physical FBA returns (`customerReturns` / hasCustomerReturn)
+      - Finances refunds (`refunds` / hasRefund), including returnless refunds
+        that never appear in the FBA Customer Returns report
+
+    Bound by `purchaseDate` (same sale-window as the rest of Profitability),
+    not return/refund date. For an order that has BOTH a physical return and a
+    refund for the same SKU, units are counted once (max of the two) so the
+    20% return-processing fee is not double-charged.
+
+    Referral base uses the order line's own referralFee:
+
+        refunded_referral += (referralFee.amount / quantityOrdered) × qty
+
+    Returns {sku: {returned_units, refunded_referral, asin}}.
+    """
+    seller_id = ObjectId(str(user["_id"]))
+    cursor = _db().orders.find(
+        {
+            "sellerId": seller_id,
+            "purchaseDate": {"$gte": start, "$lte": end},
+            "$or": [
+                {"hasCustomerReturn": True},
+                {"hasRefund": True},
+            ],
+        },
+        {
+            "orderItems": 1,
+            "customerReturns": 1,
+            "refunds": 1,
+        },
+    )
+
+    out: dict[str, dict] = {}
+    async for order in cursor:
+        items = list(order.get("orderItems") or [])
+        items_by_sku = {
+            html.unescape(str(it.get("sellerSku") or "")).strip(): it
+            for it in items
+            if str(it.get("sellerSku") or "").strip()
+        }
+        primary = items[0] if items else {}
+
+        return_units: dict[str, int] = {}
+        refund_units: dict[str, int] = {}
+        asin_by_sku: dict[str, str] = {}
+
+        for row in order.get("customerReturns") or []:
+            sku = html.unescape(str(row.get("sku") or "")).strip()
+            if not sku:
+                sku = html.unescape(str(primary.get("sellerSku") or "")).strip()
+            if not sku:
+                continue
+            qty = int(row.get("quantity") or 0)
+            if qty <= 0:
+                continue
+            return_units[sku] = return_units.get(sku, 0) + qty
+            if row.get("asin"):
+                asin_by_sku[sku] = str(row["asin"])
+
+        # listTransactions often stores DEFERRED then RELEASED for the same
+        # refundId. Summing both would double returned_units — keep the max
+        # qty per (refundId, sku), or sum rows that have no refundId.
+        refund_id_qty: dict[str, int] = {}
+        for row in order.get("refunds") or []:
+            sku = html.unescape(str(row.get("sku") or "")).strip()
+            if not sku:
+                sku = html.unescape(str(primary.get("sellerSku") or "")).strip()
+            if not sku:
+                continue
+            qty = int(row.get("quantity") or 0)
+            if qty <= 0:
+                continue
+            if row.get("asin") and sku not in asin_by_sku:
+                asin_by_sku[sku] = str(row["asin"])
+
+            rid = str(row.get("refundId") or "").strip()
+            if rid:
+                key = f"{rid}|{sku}"
+                prev = refund_id_qty.get(key, 0)
+                if qty > prev:
+                    refund_units[sku] = refund_units.get(sku, 0) - prev + qty
+                    refund_id_qty[key] = qty
+            else:
+                refund_units[sku] = refund_units.get(sku, 0) + qty
+
+        for sku in set(return_units) | set(refund_units):
+            # Same unit often appears as both an FBA return and a Finances refund.
+            qty = max(return_units.get(sku, 0), refund_units.get(sku, 0))
+            if qty <= 0:
+                continue
+
+            item = items_by_sku.get(sku) or primary
+            ordered = float(item.get("quantityOrdered") or 0)
+            # Cap at units ordered — multiple Finances refund txs can each repeat
+            # ProductContext.quantityShipped (e.g. fee adjustments), which would
+            # otherwise double returned_units above what the customer bought.
+            if ordered > 0:
+                qty = min(qty, int(ordered))
+            referral_total = float((item.get("referralFee") or {}).get("amount") or 0)
+            referral_per_unit = (referral_total / ordered) if ordered > 0 else 0.0
+
+            entry = out.setdefault(
+                sku,
+                {"returned_units": 0, "refunded_referral": 0.0, "asin": None},
+            )
+            entry["returned_units"] += qty
+            entry["refunded_referral"] += referral_per_unit * qty
+            if not entry["asin"]:
+                entry["asin"] = (
+                    asin_by_sku.get(sku)
+                    or item.get("asin")
+                    or None
+                )
+
+    for entry in out.values():
+        entry["returned_units"] = int(entry["returned_units"] or 0)
+        entry["refunded_referral"] = abs(float(entry["refunded_referral"] or 0.0))
+
+    return out
+
+
+async def fba_aged_inventory_by_sku(user: dict) -> Optional[dict[str, dict]]:
+    """Read Aurora's `fbaagedinventoryfees` snapshot for this seller.
+
+    Aurora's fbaAgedInventorySyncService runs from inventorySyncService and
+    persists per-SKU projections from GET_FBA_INVENTORY_PLANNING_DATA:
+      { monthlyFee, totalAgedUnits, asin, historicalDaysOfSupply }.
+
+    Returns None when the collection has no doc for this seller (Aurora
+    hasn't synced yet). Returns an empty dict when the doc exists but is
+    empty (Aurora synced, no aged inventory) — caller can distinguish
+    "not synced" from "no charges" by the None vs {} return.
+    """
+    seller_id = ObjectId(str(user["_id"]))
+    doc = await _db().fbaagedinventoryfees.find_one({"sellerId": seller_id})
+    if not doc:
+        return None
+    per_sku_raw = doc.get("perSku") or {}
+    # Normalize the JS camelCase to Python snake_case so consumers don't
+    # need to know which side wrote the doc.
+    out: dict[str, dict] = {}
+    for sku, v in per_sku_raw.items():
+        if not isinstance(v, dict):
+            continue
+        out[sku] = {
+            "monthly_fee": float(v.get("monthlyFee") or 0.0),
+            "total_aged_units": int(v.get("totalAgedUnits") or 0),
+            "asin": v.get("asin"),
+            "historical_days_of_supply": (
+                float(v["historicalDaysOfSupply"])
+                if v.get("historicalDaysOfSupply") is not None else None
+            ),
+        }
+    return out
+
+
+async def fba_inbound_placement_by_sku(user: dict) -> Optional[dict[str, dict]]:
+    """Read Aurora's `fbainboundplacementfees` snapshot for this seller.
+
+    Prefer dated `events` when present (Seller Central transaction rows).
+    Also returns rolled-up perSku rates for legacy / Finances-join docs.
+
+    Returns the shape used by agent._build_placement_rates, plus optional
+    `_events` key on a sentinel… actually returns only per_sku map.
+    Use `fba_inbound_placement_charges_for_window` for date-filtered totals.
+    """
+    seller_id = ObjectId(str(user["_id"]))
+    doc = await _db().fbainboundplacementfees.find_one({"sellerId": seller_id})
+    if not doc:
+        return None
+    per_sku_raw = doc.get("perSku") or {}
+    out: dict[str, dict] = {}
+    for sku, v in per_sku_raw.items():
+        if not isinstance(v, dict):
+            continue
+        units = int(v.get("totalUnits") or 0)
+        fee = float(v.get("totalFee") or 0.0)
+        rate = float(v.get("fee_rate") or v.get("avgFeePerUnit") or 0.0)
+        if rate <= 0 and units > 0 and fee > 0:
+            rate = fee / units
+        if rate <= 0 and fee <= 0:
+            continue
+        bearing = units if units > 0 else (1 if rate > 0 else 0)
+        out[sku] = {
+            "fee_total": fee if fee > 0 else round(rate * bearing, 4),
+            "units_received": units,
+            "fee_bearing_units": bearing,
+            "fee_rate": round(rate, 6),
+            "asin": v.get("asin"),
+            "fnsku": v.get("fnsku"),
+        }
+    return out or None
+
+
+def _parse_placement_tx_date(raw: str | None) -> datetime | None:
+    if not raw:
+        return None
+    s = str(raw).strip().replace("/", "-")
+    if " " in s and "T" not in s:
+        s = s.replace(" ", "T", 1)
+    # Truncate fractional seconds / timezone noise for fromisoformat
+    if len(s) >= 19:
+        s = s[:19]
+    try:
+        dt = datetime.fromisoformat(s)
+    except ValueError:
+        try:
+            dt = datetime.strptime(s[:10], "%Y-%m-%d")
+        except ValueError:
+            return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+async def fba_inbound_placement_charges_for_window(
+    user: dict,
+    start_dt: datetime,
+    end_dt: datetime,
+    marketplace_tz: str | None = None,
+) -> tuple[dict[str, float], dict[str, float], dict]:
+    """Sum Seller Central placement charges whose Transaction date falls in
+    the profitability filter — same Event Date window as Seller Central.
+
+    Transaction dates from SC have no timezone; compare calendar days in the
+    marketplace timezone (same day boundaries as Orders / display_start/end).
+
+    Returns (by_sku_fee_total, by_asin_fee_total, meta).
+    ASIN map only includes events that could not be resolved to a seller SKU
+    (avoids double-counting when both maps are used).
+    """
+    seller_id = ObjectId(str(user["_id"]))
+    doc = await _db().fbainboundplacementfees.find_one({"sellerId": seller_id})
+    meta: dict = {"source": None, "event_count": 0, "matched_events": 0}
+    if not doc:
+        return {}, {}, meta
+
+    meta["source"] = doc.get("source") or "unknown"
+    events = doc.get("events") or []
+    if not events:
+        return {}, {}, meta
+
+    if start_dt.tzinfo is None:
+        start_dt = start_dt.replace(tzinfo=timezone.utc)
+    if end_dt.tzinfo is None:
+        end_dt = end_dt.replace(tzinfo=timezone.utc)
+
+    by_sku: dict[str, float] = defaultdict(float)
+    by_asin: dict[str, float] = defaultdict(float)
+    meta["event_count"] = len(events)
+    window_total = 0.0
+
+    # Marketplace-local calendar days (matches display_start / display_end).
+    try:
+        from zoneinfo import ZoneInfo
+        tz = ZoneInfo(marketplace_tz) if marketplace_tz else timezone.utc
+    except Exception:
+        tz = timezone.utc
+    start_day = start_dt.astimezone(tz).date()
+    end_day = end_dt.astimezone(tz).date()
+    meta["window_start"] = start_day.isoformat()
+    meta["window_end"] = end_day.isoformat()
+
+    for ev in events:
+        if not isinstance(ev, dict):
+            continue
+        tx = _parse_placement_tx_date(ev.get("transaction_date"))
+        if tx is None:
+            continue
+        # SC Transaction date is marketplace-local wall time without TZ.
+        tx_day = tx.replace(tzinfo=None).date()
+        if tx_day < start_day or tx_day > end_day:
+            continue
+        fee = float(ev.get("fee_total") or 0)
+        if fee <= 0:
+            continue
+        meta["matched_events"] += 1
+        window_total += fee
+        sku = (ev.get("sku") or "").strip()
+        asin = (ev.get("asin") or "").strip().upper()
+        if sku:
+            by_sku[sku] += fee
+        elif asin:
+            by_asin[asin] += fee
+
+    meta["window_total"] = round(window_total, 2)
+    return (
+        {k: round(v, 2) for k, v in by_sku.items()},
+        {k: round(v, 2) for k, v in by_asin.items()},
+        meta,
+    )
+
+
+async def resolve_placement_events_to_skus(
+    user: dict,
+    events: list[dict],
+) -> list[dict]:
+    """Attach seller SKU to each dated placement event via FNSKU/ASIN."""
+    if not events:
+        return []
+    # Reuse resolve on a synthetic per-key map, then stamp sku onto events.
+    synthetic: dict[str, dict] = {}
+    for ev in events:
+        fn = (ev.get("fnsku") or "").strip().upper()
+        asin = (ev.get("asin") or "").strip().upper()
+        key = fn or asin or (ev.get("sku") or "")
+        if not key:
+            continue
+        synthetic[key] = {
+            "fee_total": float(ev.get("fee_total") or 0),
+            "units_received": int(ev.get("units") or 0),
+            "fee_bearing_units": int(ev.get("units") or 0),
+            "fee_rate": float(ev.get("fee_rate") or 0),
+            "asin": asin or None,
+            "fnsku": fn or None,
+            "sku": (ev.get("sku") or None),
+        }
+    resolved = await resolve_placement_report_to_skus(user, synthetic)
+    # Build fnsku→sku and asin→sku from resolved
+    fn_to_sku: dict[str, str] = {}
+    asin_to_sku: dict[str, str] = {}
+    for sku, b in resolved.items():
+        if b.get("fnsku"):
+            fn_to_sku[str(b["fnsku"]).upper()] = sku
+        if b.get("asin"):
+            asin_to_sku[str(b["asin"]).upper()] = sku
+
+    out: list[dict] = []
+    for ev in events:
+        row = dict(ev)
+        fn = (row.get("fnsku") or "").strip().upper()
+        asin = (row.get("asin") or "").strip().upper()
+        sku = (row.get("sku") or "").strip()
+        if not sku and fn and fn in fn_to_sku:
+            sku = fn_to_sku[fn]
+        if not sku and asin and asin in asin_to_sku:
+            sku = asin_to_sku[asin]
+        row["sku"] = sku or None
+        row["fnsku"] = fn or None
+        row["asin"] = asin or None
+        out.append(row)
+    return out
+
+
+async def resolve_placement_report_to_skus(
+    user: dict,
+    report_rows: dict[str, dict],
+) -> dict[str, dict]:
+    """Map placement report rows (often keyed by FNSKU) onto seller SKUs.
+
+    Seller Central's FBA inbound placement service fees CSV is keyed by
+    FNSKU + ASIN. Profitability is SKU-keyed, so resolve via Aurora products.
+    """
+    if not report_rows:
+        return {}
+    seller_id = ObjectId(str(user["_id"]))
+    fnskus = sorted(
+        {
+            str(b.get("fnsku") or key).strip().upper()
+            for key, b in report_rows.items()
+            if isinstance(b, dict)
+            and (
+                b.get("fnsku")
+                or (str(key).upper().startswith("X") and len(str(key)) >= 10)
+            )
+        }
+    )
+    asins = sorted(
+        {
+            str(b.get("asin") or "").strip().upper()
+            for b in report_rows.values()
+            if isinstance(b, dict) and b.get("asin")
+        }
+    )
+    fnsku_to_sku: dict[str, str] = {}
+    asin_to_skus: dict[str, list[str]] = {}
+    if fnskus or asins:
+        query: dict[str, Any] = {"sellerId": seller_id}
+        ors = []
+        if fnskus:
+            ors.append({"fnSku": {"$in": fnskus}})
+        if asins:
+            ors.append({"asin": {"$in": asins}})
+        if ors:
+            query["$or"] = ors
+        cursor = _db().products.find(query, {"sku": 1, "asin": 1, "fnSku": 1})
+        async for doc in cursor:
+            sku = (doc.get("sku") or "").strip()
+            if not sku:
+                continue
+            fn = (doc.get("fnSku") or "").strip().upper()
+            asin = (doc.get("asin") or "").strip().upper()
+            if fn:
+                fnsku_to_sku[fn] = sku
+            if asin:
+                asin_to_skus.setdefault(asin, []).append(sku)
+
+    per_sku: dict[str, dict] = {}
+
+    def _merge(sku: str, b: dict) -> None:
+        if not sku:
+            return
+        dst = per_sku.setdefault(
+            sku,
+            {
+                "fee_total": 0.0,
+                "units_received": 0,
+                "fee_bearing_units": 0,
+                "rate_weight": 0.0,
+                "rate_weighted_sum": 0.0,
+                "asin": None,
+                "fnsku": None,
+            },
+        )
+        fee = float(b.get("fee_total") or 0)
+        units = int(b.get("units_received") or 0)
+        bearing = int(b.get("fee_bearing_units") or 0)
+        rate = float(b.get("fee_rate") or 0)
+        weight = bearing if bearing > 0 else (units if units > 0 else (1 if rate > 0 else 0))
+        dst["fee_total"] += fee
+        dst["units_received"] += units
+        dst["fee_bearing_units"] += bearing if bearing > 0 else weight
+        if rate > 0 and weight > 0:
+            dst["rate_weight"] += weight
+            dst["rate_weighted_sum"] += rate * weight
+        if b.get("asin") and not dst.get("asin"):
+            dst["asin"] = str(b["asin"]).upper()
+        if b.get("fnsku") and not dst.get("fnsku"):
+            dst["fnsku"] = str(b["fnsku"]).upper()
+
+    for key, b in report_rows.items():
+        if not isinstance(b, dict):
+            continue
+        explicit_sku = (b.get("sku") or "").strip()
+        fnsku = (b.get("fnsku") or "").strip().upper()
+        asin = (b.get("asin") or "").strip().upper()
+        key_s = str(key).strip()
+        key_u = key_s.upper()
+
+        sku = explicit_sku
+        if sku and (
+            sku.upper() == (fnsku or "").upper()
+            or sku.upper() == (asin or "").upper()
+            or (sku.upper().startswith("X") and len(sku) >= 10)
+        ):
+            sku = ""
+        if not sku and key_s and not key_u.startswith("X") and not (
+            key_u.startswith("B") and len(key_u) == 10
+        ):
+            sku = key_s
+        if not sku and fnsku and fnsku in fnsku_to_sku:
+            sku = fnsku_to_sku[fnsku]
+        if not sku and key_u.startswith("X") and key_u in fnsku_to_sku:
+            sku = fnsku_to_sku[key_u]
+            fnsku = fnsku or key_u
+        if not sku and asin:
+            cands = asin_to_skus.get(asin) or []
+            if len(cands) == 1:
+                sku = cands[0]
+        if sku:
+            _merge(sku, {**b, "fnsku": fnsku or b.get("fnsku"), "asin": asin or b.get("asin")})
+        elif asin:
+            # Keep ASIN-keyed row so _build_placement_rates can still match.
+            _merge(asin, {**b, "fnsku": fnsku or b.get("fnsku"), "asin": asin})
+
+    out: dict[str, dict] = {}
+    for sku, v in per_sku.items():
+        if v.get("rate_weight", 0) > 0:
+            fee_rate = v["rate_weighted_sum"] / v["rate_weight"]
+        elif v.get("fee_bearing_units", 0) > 0:
+            fee_rate = v["fee_total"] / v["fee_bearing_units"]
+        elif v.get("units_received", 0) > 0:
+            fee_rate = v["fee_total"] / v["units_received"]
+        else:
+            continue
+        if fee_rate <= 0:
+            continue
+        out[sku] = {
+            "fee_total": round(v["fee_total"], 4),
+            "units_received": int(v["units_received"]),
+            "fee_bearing_units": int(v["fee_bearing_units"]),
+            "fee_rate": round(fee_rate, 6),
+            "asin": v.get("asin"),
+            "fnsku": v.get("fnsku"),
+        }
+    return out
+
+
+async def placement_rates_from_shipments(
+    user: dict,
+    fees_by_shipment: dict[str, float],
+) -> dict[str, dict]:
+    """Rebuild per-SKU inbound placement fees from shipment-level Finances
+    lump sums (FBAInboundConvenienceFee, keyed by FBA shipment id) joined
+    with Aurora `shipments.lineItems` units received.
+
+    Returns the same shape as amazon_sp.fetch_inbound_placement_fees_per_sku:
+    {sku: {fee_total, units_received, fee_bearing_units, asin}} so the
+    caller's rate-building and cache format are unchanged.
+    """
+    if not fees_by_shipment:
+        return {}
+    seller_id = ObjectId(str(user["_id"]))
+    ship_ids = [sid for sid in fees_by_shipment if sid and sid != "_unknown"]
+    if not ship_ids:
+        return {}
+    cursor = _db().shipments.find(
+        {"sellerId": seller_id, "shipmentId": {"$in": ship_ids}},
+        {"shipmentId": 1, "lineItems": 1},
+    )
+    per_sku: dict[str, dict] = {}
+    async for doc in cursor:
+        fee = float(fees_by_shipment.get(doc.get("shipmentId")) or 0)
+        items = doc.get("lineItems") or []
+        total_units = sum(
+            max(int(it.get("unitsReceived") or 0), 0) for it in items
+        )
+        if fee <= 0 or total_units <= 0:
+            continue
+        # Allocate the shipment's lump sum across SKUs by units received —
+        # the per-unit rate within one shipment is near-uniform (size tier).
+        for it in items:
+            units = max(int(it.get("unitsReceived") or 0), 0)
+            sku = (it.get("sku") or "").strip()
+            if units <= 0 or not sku:
+                continue
+            bucket = per_sku.setdefault(
+                sku,
+                {"fee_total": 0.0, "units_received": 0,
+                 "fee_bearing_units": 0, "asin": None},
+            )
+            bucket["fee_total"] += fee * units / total_units
+            bucket["units_received"] += units
+            bucket["fee_bearing_units"] += units
+    if not per_sku:
+        return {}
+    prod_cursor = _db().products.find(
+        {"sellerId": seller_id, "sku": {"$in": list(per_sku.keys())}},
+        {"sku": 1, "asin": 1},
+    )
+    async for doc in prod_cursor:
+        bucket = per_sku.get(doc.get("sku"))
+        if bucket is not None and doc.get("asin"):
+            bucket["asin"] = str(doc["asin"]).upper()
+    return {
+        sku: {**b, "fee_total": round(b["fee_total"], 2)}
+        for sku, b in per_sku.items()
+    }
+
+
+def list_user_marketplaces(user: dict) -> list[dict]:
+    ids = user.get("amazonMarketplaceIds") or []
+    if not ids:
+        ids = ["ATVPDKIKX0DER"]
+    primary = ids[0]
+    if "ATVPDKIKX0DER" in ids:
+        primary = "ATVPDKIKX0DER"
+    return [
+        {
+            "id": mid,
+            "name": MARKETPLACE_NAMES.get(mid, "Unknown"),
+            "is_primary": mid == primary,
+        }
+        for mid in [str(x) for x in ids]
+    ]
+
+
+async def fetch_inventory_summaries(
+    user: dict,
+    skus: Optional[list[str]] = None,
+) -> list[dict]:
+    """FBA inventory from Aurora `products` collection."""
+    seller_id = ObjectId(str(user["_id"]))
+    query: dict[str, Any] = {"sellerId": seller_id}
+    if skus:
+        query["sku"] = {"$in": skus}
+    cursor = _db().products.find(
+        query,
+        {"sku": 1, "asin": 1, "inventory": 1, "fulfillmentType": 1},
+    )
+    rows: list[dict] = []
+    async for doc in cursor:
+        inv = doc.get("inventory") or {}
+        rows.append({
+            "sellerSku": doc.get("sku"),
+            "asin": doc.get("asin"),
+            "inventoryDetails": {
+                "fulfillableQuantity": int(inv.get("fulfillableQuantity") or 0),
+                "inboundWorkingQuantity": int(inv.get("inboundWorkingQuantity") or 0),
+                "inboundShippedQuantity": int(inv.get("inboundShippedQuantity") or 0),
+                "reservedQuantity": {
+                    "totalReservedQuantity": int(inv.get("reservedQuantity") or 0),
+                },
+                "unfulfillableQuantity": {
+                    "totalUnfulfillableQuantity": int(inv.get("unfulfillableQuantity") or 0),
+                },
+            },
+            "fulfillmentType": doc.get("fulfillmentType"),
+        })
+    return rows
+
+
+async def fetch_ad_spend_by_campaign(
+    user: dict, start_ymd: str, end_ymd: str,
+) -> dict[str, float]:
+    """Per-campaign spend in [start_ymd, end_ymd] from Aurora's
+    `admetricsdailies` collection — the exact source Aurora's own
+    /api/ads dashboard aggregates when a date filter is applied
+    (see auroraBackend/src/services/adsMetricsService.js:124).
+
+    YMD strings match Aurora's `date` field format. Returns
+    {campaignId: total_spend_in_range}.
+    """
+    seller_id = ObjectId(str(user["_id"]))
+    cursor = _db().admetricsdailies.aggregate([
+        {"$match": {
+            "sellerId": seller_id,
+            "source": "DAILY",
+            "date": {"$gte": start_ymd, "$lte": end_ymd},
+        }},
+        {"$group": {
+            "_id": "$campaignId",
+            "spend": {"$sum": {"$ifNull": ["$spend", 0]}},
+        }},
+    ])
+    rows = await cursor.to_list(length=None)
+    return {str(r["_id"]): float(r.get("spend") or 0) for r in rows if r.get("_id")}
+
+
+async def fetch_campaigns(user: dict) -> list[dict]:
+    """Campaign metrics from Aurora `ads` collection (+ optional extras)."""
+    seller_id = ObjectId(str(user["_id"]))
+    cursor = _db().ads.find({"sellerId": seller_id})
+    campaigns = await cursor.to_list(length=None)
+    for doc in campaigns:
+        doc.pop("_id", None)
+        for key in ("startDate", "endDate", "metricsStartDate", "metricsEndDate", "lastSynced"):
+            val = doc.get(key)
+            if isinstance(val, datetime):
+                doc[key] = val.isoformat()
+    try:
+        extras = await _db().middhaAdCampaigns.find(
+            {"sellerId": seller_id}, {"_id": 0, "sellerId": 0},
+        ).to_list(length=None)
+        seen = {c.get("campaignId") for c in campaigns}
+        for extra in extras:
+            if extra.get("campaignId") not in seen:
+                campaigns.append(extra)
+    except Exception:
+        pass
+    return campaigns
+
+
+async def aggregate_sales_daily_from_orders(
+    user_id: ObjectId,
+    start: datetime,
+    end: datetime,
+) -> list[dict]:
+    """Aggregate Aurora orders into (sku, date) rows for forecasting ingest."""
+    user = await _db().users.find_one({"_id": user_id})
+    if not user:
+        return []
+    created_after = start.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    created_before = end.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    docs = await fetch_orders_with_items(
+        user, created_after=created_after, created_before=created_before,
+    )
+    by_key: dict[tuple[str, datetime], dict] = {}
+    for doc in docs:
+        if is_excluded_order_status(doc.get("orderStatus")):
+            continue
+        pd = doc.get("purchaseDate")
+        if not isinstance(pd, datetime):
+            continue
+        day = datetime.combine(pd.date(), datetime.min.time(), tzinfo=timezone.utc)
+        if day < start or day >= end:
+            continue
+        for it in doc.get("orderItems") or []:
+            sku = (it.get("sellerSku") or "").strip()
+            if not sku:
+                continue
+            qty = int(it.get("quantityOrdered") or 0)
+            if qty <= 0:
+                continue
+            revenue = line_item_sales_amount(it)
+            key = (sku, day)
+            agg = by_key.setdefault(key, {
+                "sku": sku,
+                "date": day,
+                "asin": it.get("asin") or "",
+                "units_ordered": 0,
+                "ordered_revenue": 0.0,
+                "sessions": 0,
+                "page_views": 0,
+                "buy_box_pct": 0.0,
+                "ad_spend": 0.0,
+                "ad_impressions": 0,
+                "ad_clicks": 0,
+                "stockout_corrected": False,
+            })
+            agg["units_ordered"] += qty
+            agg["ordered_revenue"] += revenue
+            if it.get("asin") and not agg.get("asin"):
+                agg["asin"] = it["asin"]
+    return list(by_key.values())
+
+
+async def aggregate_sales_daily_lean(
+    user_id: ObjectId,
+    start: datetime,
+    end: datetime,
+    sku: Optional[str] = None,
+) -> list[dict]:
+    """Server-side (sku, date) aggregation from Aurora `orders`.
+
+    Uses a Mongo aggregation pipeline so the AI backend only receives the
+    already-summed rows — the naive per-doc fetch in
+    `aggregate_sales_daily_from_orders` was OOM-ing Render's 512 MB tier
+    on multi-hundred-day windows.
+    """
+    # For velocity/forecasting we count every order that was placed —
+    # including Pending and Cancelled — because they still represent
+    # customer demand at the moment of purchase. Profitability paths
+    # (aggregate_sku_metrics_from_orders) keep the CANCELLED_ORDER_STATUSES
+    # filter because those don't recognise revenue.
+    pipeline: list[dict] = [
+        {
+            "$match": {
+                "sellerId": user_id,
+                "purchaseDate": {"$gte": start, "$lt": end},
+            },
+        },
+        {"$unwind": "$orderItems"},
+    ]
+    if sku:
+        pipeline.append({"$match": {"orderItems.sellerSku": sku}})
+    pipeline += [
+        {
+            "$project": {
+                "_id": 0,
+                "sku": "$orderItems.sellerSku",
+                "asin": "$orderItems.asin",
+                "qty": {"$ifNull": ["$orderItems.quantityOrdered", 0]},
+                "subtotal": {"$ifNull": ["$orderItems.itemSubtotal.amount", 0]},
+                "item_price": {"$ifNull": ["$orderItems.itemPrice.amount", 0]},
+                "promo": {"$ifNull": ["$orderItems.promotionDiscount.amount", 0]},
+                "day": {
+                    "$dateTrunc": {"date": "$purchaseDate", "unit": "day", "timezone": "UTC"},
+                },
+            },
+        },
+        {"$match": {"sku": {"$ne": None, "$nin": ["", None]}, "qty": {"$gt": 0}}},
+        {
+            "$group": {
+                "_id": {"sku": "$sku", "date": "$day"},
+                "asin": {"$first": "$asin"},
+                "units_ordered": {"$sum": "$qty"},
+                "ordered_revenue": {
+                    "$sum": {
+                        "$max": [
+                            0,
+                            {"$subtract": [
+                                {"$cond": [{"$gt": ["$subtotal", 0]}, "$subtotal", "$item_price"]},
+                                "$promo",
+                            ]},
+                        ],
+                    },
+                },
+            },
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "sku": "$_id.sku",
+                "date": "$_id.date",
+                "asin": 1,
+                "units_ordered": 1,
+                "ordered_revenue": 1,
+                "sessions": {"$literal": 0},
+                "page_views": {"$literal": 0},
+                "buy_box_pct": {"$literal": 0.0},
+                "ad_spend": {"$literal": 0.0},
+                "ad_impressions": {"$literal": 0},
+                "ad_clicks": {"$literal": 0},
+                "stockout_corrected": {"$literal": False},
+            },
+        },
+        {"$sort": {"sku": 1, "date": 1}},
+    ]
+    cursor = _db().orders.aggregate(pipeline, allowDiskUse=True)
+    return await cursor.to_list(length=None)
+
+
+async def inventory_snapshot_rows_from_products(user_id: ObjectId) -> list[dict]:
+    """Today's inventory snapshot rows from Aurora products."""
+    today = datetime.combine(
+        datetime.now(timezone.utc).date(), datetime.min.time(), tzinfo=timezone.utc,
+    )
+    cursor = _db().products.find(
+        {"sellerId": user_id},
+        {"sku": 1, "inventory": 1},
+    )
+    rows: list[dict] = []
+    async for doc in cursor:
+        sku = (doc.get("sku") or "").strip()
+        if not sku:
+            continue
+        inv = doc.get("inventory") or {}
+        rows.append({
+            "sku": sku,
+            "date": today,
+            "fulfillable": int(inv.get("fulfillableQuantity") or 0),
+            "inbound_working": int(inv.get("inboundWorkingQuantity") or 0),
+            "inbound_shipped": int(inv.get("inboundShippedQuantity") or 0),
+            "reserved": int(inv.get("reservedQuantity") or 0),
+            "unfulfillable": int(inv.get("unfulfillableQuantity") or 0),
+        })
+    return rows

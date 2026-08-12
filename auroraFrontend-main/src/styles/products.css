@@ -1,0 +1,326 @@
+/* Aurora Seller Dashboard Products Page CSS */
+
+.apple-products-page {
+  --bg-color: #f9f9ff;
+  --text-main: #181c23;
+  --text-secondary: #5e5e63;
+  --primary-blue: #0059b5;
+  --primary-hover: #00458f;
+  --border-color: #c1c6d6;
+  --surface-white: #ffffff;
+  --surface-low: #f2f3fd;
+  --surface-container: #ecedf7;
+  --surface-high: #e6e8f2;
+
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  min-height: calc(100vh - 70px);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.apple-products-page * {
+  box-sizing: border-box;
+}
+
+.apple-products-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 2rem 2rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Header Section */
+.apple-products-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .apple-products-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+}
+
+.apple-products-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0 0 0.35rem;
+  letter-spacing: -0.01em;
+}
+
+.apple-products-desc {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 680px;
+}
+
+.apple-header-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Primary & Secondary Buttons */
+.apple-products-page .apple-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--primary-blue);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.55rem 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.15s ease;
+}
+
+.apple-products-page .apple-btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.apple-products-page .apple-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--surface-white);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.55rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.apple-products-page .apple-btn-secondary:hover {
+  border-color: var(--text-secondary);
+  background-color: var(--surface-low);
+}
+
+/* Search & Filter Bar Card */
+.apple-search-card {
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.apple-search-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .apple-search-row {
+    flex-direction: row;
+  }
+}
+
+.apple-search-wrap {
+  position: relative;
+  flex-grow: 1;
+}
+
+.apple-search-icon {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.apple-search-input {
+  width: 100%;
+  background-color: var(--surface-white);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: 0.92rem;
+  border-radius: 8px;
+  padding: 0.6rem 1rem 0.6rem 2.5rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.apple-search-input:focus {
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(0, 89, 181, 0.12);
+}
+
+.apple-meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-top: 1px solid var(--border-color);
+  padding-top: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .apple-meta-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.apple-meta-text {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.apple-meta-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.apple-select {
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: 0.82rem;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 0.45rem 2rem 0.45rem 0.85rem;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235e5e63' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  background-size: 14px;
+}
+
+.apple-select:hover {
+  border-color: var(--text-secondary);
+}
+
+/* Data Table Card Section */
+.apple-table-card {
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.apple-table-scroll {
+  overflow-x: auto;
+  flex-grow: 1;
+}
+
+.apple-table-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+.apple-table-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+.apple-table-scroll::-webkit-scrollbar-thumb {
+  background: #c1c6d6;
+  border-radius: 4px;
+}
+.apple-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: #717785;
+}
+
+.apple-table {
+  width: 100%;
+  text-align: left;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 1500px;
+}
+
+.apple-table thead {
+  background-color: var(--surface-low);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.apple-table th {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 0.75rem 0.85rem;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--surface-low);
+}
+
+.apple-table td {
+  padding: 0.85rem;
+  font-size: 0.88rem;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+  background-color: var(--bg-color);
+}
+
+.apple-table tbody tr:hover td {
+  background-color: var(--surface-low);
+}
+
+/* Fix for Sticky Actions Column Overlap */
+.apple-table thead th.apple-table-sticky-actions {
+  position: sticky;
+  right: 0;
+  background-color: #f2f3fd !important;
+  z-index: 25 !important;
+  box-shadow: -4px 0 8px -2px rgba(0, 0, 0, 0.08);
+}
+
+.apple-table tbody td.apple-table-sticky-actions {
+  position: sticky;
+  right: 0;
+  background-color: #f9f9ff !important;
+  z-index: 15 !important;
+  box-shadow: -4px 0 8px -2px rgba(0, 0, 0, 0.08);
+}
+
+.apple-table tbody tr:hover td.apple-table-sticky-actions {
+  background-color: #f2f3fd !important;
+}
+
+/* Pagination Footer */
+.apple-pagination-footer {
+  background-color: var(--surface-white);
+  border-top: 1px solid var(--border-color);
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.apple-products-page .material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-size: 18px;
+  vertical-align: middle;
+}

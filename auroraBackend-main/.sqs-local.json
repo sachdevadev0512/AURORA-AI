@@ -1,0 +1,6 @@
+{
+  "queueArn": "arn:aws:sqs:us-east-1:209815669958:aurora-sp-api-order-notifications",
+  "queueUrl": "https://sqs.us-east-1.amazonaws.com/209815669958/aurora-sp-api-order-notifications",
+  "region": "us-east-1",
+  "updatedAt": "2026-08-04T14:40:05.647Z"
+}

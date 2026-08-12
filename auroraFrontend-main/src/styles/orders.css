@@ -1,0 +1,432 @@
+/* Apple-Inspired Orders Page & Drawer CSS */
+
+.apple-orders-page {
+  --bg-color: #FBFBFD;
+  --text-main: #1D1D1F;
+  --text-muted: #86868B;
+  --primary-blue: #0071e3;
+  --primary-hover: #0059b5;
+  --border-color: #E5E5EA;
+  --card-bg: #FFFFFF;
+  --table-header-bg: #F5F5F7;
+
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  min-height: calc(100vh - 70px);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.apple-orders-page * {
+  box-sizing: border-box;
+}
+
+.apple-orders-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Header Section */
+.apple-orders-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .apple-orders-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+}
+
+.apple-orders-title {
+  font-size: 2rem;
+  line-height: 2.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-main);
+  margin: 0 0 0.35rem;
+}
+
+.apple-orders-desc {
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  margin: 0;
+  max-width: 680px;
+}
+
+.apple-orders-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Status Tabs Bar */
+.apple-status-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+  overflow-x: auto;
+}
+
+.apple-status-tab {
+  background: transparent;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.apple-status-tab:hover {
+  color: var(--text-main);
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.apple-status-tab.active {
+  color: var(--primary-blue);
+  background-color: rgba(0, 113, 227, 0.08);
+  font-weight: 600;
+}
+
+/* Search & Filter Bar */
+.apple-filter-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.apple-search-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .apple-search-row {
+    flex-direction: row;
+  }
+}
+
+.apple-search-wrap {
+  position: relative;
+  flex: 1;
+}
+
+.apple-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.apple-search-input {
+  width: 100%;
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.55rem 0.85rem 0.55rem 2.25rem;
+  font-size: 0.88rem;
+  color: var(--text-main);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.apple-search-input:focus {
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.12);
+}
+
+/* Table Card */
+.apple-table-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.apple-table-scroll {
+  overflow-x: auto;
+}
+
+.apple-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+  font-size: 0.84rem;
+}
+
+.apple-table th {
+  background-color: var(--table-header-bg);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.apple-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
+.apple-table tr:last-child td {
+  border-bottom: none;
+}
+
+.apple-table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.apple-table tbody tr:hover td {
+  background-color: rgba(0, 113, 227, 0.02);
+}
+
+/* Status Badges */
+.apple-order-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.apple-order-badge.delivered,
+.apple-order-badge.shipped {
+  background-color: #E6F4EA;
+  color: #137333;
+}
+
+.apple-order-badge.pending,
+.apple-order-badge.unshipped {
+  background-color: #FEF7E0;
+  color: #B06000;
+}
+
+.apple-order-badge.cancelled {
+  background-color: #FCE8E6;
+  color: #C5221F;
+}
+
+.apple-order-badge.returned {
+  background-color: #F1F3F4;
+  color: #5F6368;
+}
+
+/* Order Detail Side Drawer Overlay & Panel */
+.apple-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  transition: opacity 0.25s ease;
+}
+
+.apple-drawer-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(580px, 100vw);
+  background-color: #FFFFFF;
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.15);
+  z-index: 201;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideDrawer 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDrawer {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.apple-drawer-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #FFFFFF;
+}
+
+.apple-drawer-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.apple-drawer-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.apple-drawer-close:hover {
+  background-color: #F5F5F7;
+  color: var(--text-main);
+}
+
+.apple-drawer-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.apple-drawer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.apple-drawer-section-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 0;
+  border-bottom: 1px solid #F0F0F2;
+  padding-bottom: 0.4rem;
+}
+
+.apple-drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem 1.25rem;
+}
+
+.apple-drawer-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.apple-drawer-field-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.apple-drawer-field-val {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+/* Purchased Item Card inside Drawer */
+.apple-drawer-item-card {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  background: #FBFBFD;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0.85rem;
+}
+
+.apple-drawer-item-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 0.2rem;
+}
+
+.apple-drawer-item-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Status Timeline Visualization */
+.apple-timeline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  padding: 1rem 0 0.5rem;
+}
+
+.apple-timeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  z-index: 1;
+}
+
+.apple-timeline-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: var(--border-color);
+  border: 2px solid #FFFFFF;
+}
+
+.apple-timeline-dot.completed {
+  background-color: var(--primary-blue);
+}
+
+.apple-timeline-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.apple-timeline-label.completed {
+  color: var(--text-main);
+}
+
+.apple-orders-page .material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-size: 18px;
+  vertical-align: middle;
+}

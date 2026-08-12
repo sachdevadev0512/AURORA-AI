@@ -1,0 +1,188 @@
+/* Apple-Inspired Amazon Integration CSS */
+
+.apple-integration-page {
+  --bg-color: #FBFBFD;
+  --text-main: #1D1D1F;
+  --text-muted: #86868B;
+  --primary-blue: #0071e3;
+  --primary-hover: #0059b5;
+  --border-color: #E5E5EA;
+  --card-bg: #FFFFFF;
+
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  min-height: calc(100vh - 70px);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.apple-integration-page * {
+  box-sizing: border-box;
+}
+
+.apple-integration-container {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.apple-integration-header {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1.5rem;
+}
+
+.apple-integration-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0 0 0.35rem;
+  letter-spacing: -0.01em;
+}
+
+.apple-integration-desc {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Connection Status Banner Card */
+.apple-status-banner {
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.apple-banner-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.apple-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.apple-status-pill.connected {
+  background-color: #E6F4EA;
+  color: #137333;
+}
+
+.apple-status-pill.disconnected {
+  background-color: #F1F3F4;
+  color: #5F6368;
+}
+
+.apple-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.apple-status-pill.connected .apple-status-dot {
+  background-color: #34c759;
+}
+
+.apple-status-pill.disconnected .apple-status-dot {
+  background-color: #8e8e93;
+}
+
+.apple-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+  background-color: #FBFBFD;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.apple-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.apple-info-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.apple-info-val {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.apple-card-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .apple-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.apple-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.apple-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.apple-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background-color: #F5F5F7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-blue);
+}
+
+.apple-card-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.apple-card-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.apple-integration-page .material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-size: 20px;
+  vertical-align: middle;
+}

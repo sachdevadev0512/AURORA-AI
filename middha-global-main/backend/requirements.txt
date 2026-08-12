@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+httpx
+groq
+python-dotenv
+aiosqlite
+playwright
+motor
+pyjwt
+bcrypt
+cryptography
+apscheduler
+pandas
+numpy
+prophet
+tzdata
