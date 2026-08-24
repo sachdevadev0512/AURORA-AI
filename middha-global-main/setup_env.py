@@ -2,7 +2,9 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-AURORA_ENV = ROOT.parent / "auroraBackend" / ".env"
+AURORA_ENV = ROOT.parent / "auroraBackend-main" / ".env"
+if not AURORA_ENV.exists():
+    AURORA_ENV = ROOT.parent / "auroraBackend" / ".env"
 TARGET = ROOT / ".env"
 
 

@@ -1,12 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 
 :root {
-  --command-bg: #f9f9ff;
-  --command-text: #181c23;
-  --command-text-secondary: #5e5e63;
-  --command-primary: #0059b5;
-  --command-primary-hover: #00458f;
-  --command-border: #c1c6d6;
+  --command-bg: #F6F8FC;
+  --command-surface: #FFFFFF;
+  --command-surface-hover: #F8FAFC;
+  --command-border: #E8EEF6;
+  --command-text-main: #000000;
+  --command-text-dim: #0A0F1D;
+  --command-accent: #4D669B;
+  --command-accent-hover: #3F5A90;
+  --command-glow: rgba(77, 102, 155, 0.15);
+  --command-shadow: 0 12px 40px rgba(41, 72, 152, 0.08);
 }
 
 .command-deck-stage {
@@ -15,8 +19,8 @@
   height: 100vh;
   background-color: var(--command-bg);
   background-image: radial-gradient(circle at 50% 30%, rgba(0, 89, 181, 0.04) 0%, transparent 60%),
-                    linear-gradient(180deg, #ffffff 0%, #f9f9ff 100%);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+                    var(--card-bg);
+
   overflow: hidden;
   transition: opacity 500ms cubic-bezier(0.16, 1, 0.3, 1), transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -100,7 +104,7 @@
   justify-content: center;
   gap: 0.75rem;
   background-color: var(--command-primary);
-  color: #ffffff;
+  color: var(--field-text);
   border: none;
   border-radius: 999px;
   padding: 0.9rem 2.25rem;

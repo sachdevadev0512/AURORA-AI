@@ -1,18 +1,18 @@
 /* Apple-Inspired Amazon Ads Page CSS */
 
 .apple-ads-page {
-  --bg-color: #FBFBFD;
-  --text-main: #1D1D1F;
-  --text-muted: #86868B;
-  --primary-blue: #0071e3;
-  --border-color: #E5E5EA;
+  --bg-color: transparent;
+  --text-main: #000000;
+  --text-muted: #0A0F1D;
+  --primary-blue: #4D669B;
+  --border-color: #E8EEF6;
   --card-bg: #FFFFFF;
-  --table-header-bg: #F5F5F7;
+  --table-header-bg: #F8FAFC;
 
   background-color: var(--bg-color);
   color: var(--text-main);
   min-height: calc(100vh - 70px);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+
   -webkit-font-smoothing: antialiased;
 }
 
@@ -45,7 +45,7 @@
 
 .apple-ads-title {
   font-size: 2rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--text-main);
   margin: 0 0 0.35rem;

@@ -48,130 +48,83 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   return (
-    <div style={{ background: isHomePage ? '#f9f9ff' : '#f9f9ff', minHeight: '100vh' }}>
+    <div style={{ background: 'transparent', minHeight: '100vh' }}>
       {/* Navbar is ONLY shown on Protected App Pages, NOT on Home Page */}
       {!isHomePage && (
-        <nav
-          className="navbar"
+        <header
+          className="navbar-sticky-wrapper"
           style={{
             position: 'sticky',
             top: 0,
-            left: 0,
-            right: 0,
             zIndex: 100,
+            width: '100%',
+            padding: '0.65rem 1rem 0.65rem',
+            background: 'linear-gradient(180deg, #D0DEF0 0%, #E2EAF5 85%, rgba(226, 234, 245, 0.95) 100%)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
-            background: 'rgba(255, 255, 255, 0.85)',
-            borderBottom: '1px solid #c1c6d6',
-            color: '#181c23',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
-            transition: 'background 0.3s ease, border-color 0.3s ease',
-            padding: '0.65rem 1.5rem',
           }}
         >
-          <div
+          <nav
+            className="navbar"
             style={{
-              maxWidth: 1440,
+              maxWidth: '1280px',
               margin: '0 auto',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '1rem',
             }}
           >
-            {/* Logo / Brand */}
-            <Link
-              to="/dashboard"
-              style={{
-                color: 'inherit',
-                textDecoration: 'none',
-                fontWeight: 600,
-                fontSize: '1rem',
-                letterSpacing: '-0.01em',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-                flexShrink: 0,
-              }}
-            >
-              <span
-                style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: 6,
-                  background: '#0059b5',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#ffffff',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                }}
-              >
-                A
-              </span>
-              <span>Aurora Seller Dashboard</span>
-            </Link>
-
-            {/* Nav Links containing ALL app pages */}
             <div
               style={{
+                width: '100%',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.35rem',
-                overflowX: 'auto',
-                msOverflowStyle: 'none',
-                scrollbarWidth: 'none',
+                justifyContent: 'space-between',
+                gap: '1rem',
               }}
             >
-              {NAV_LINKS.map((link) => {
-                const isActive = location.pathname.startsWith(link.path);
-
-                return (
-                  <Link
-                    key={link.path}
-                    to={link.path}
-                    style={{
-                      fontSize: '0.82rem',
-                      fontWeight: isActive ? 600 : 500,
-                      color: isActive ? '#0059b5' : '#5e5e63',
-                      padding: '0.35rem 0.65rem',
-                      borderRadius: '6px',
-                      background: isActive ? 'rgba(0, 89, 181, 0.08)' : 'transparent',
-                      transition: 'all 0.15s ease',
-                      textDecoration: 'none',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Right Section */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-              <NotificationBell />
-              <button
-                type="button"
-                onClick={handleLogout}
+              {/* Nav Links containing ALL app pages */}
+              <div
+                className="navbar-links"
                 style={{
-                  fontSize: '0.8rem',
-                  fontWeight: 500,
-                  padding: '0.35rem 0.75rem',
-                  borderRadius: '6px',
-                  border: '1px solid #c1c6d6',
-                  background: '#e6e8f2',
-                  color: '#181c23',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  overflowX: 'auto',
+                  msOverflowStyle: 'none',
+                  scrollbarWidth: 'none',
                 }}
               >
-                Logout
-              </button>
+                {NAV_LINKS.map((link) => {
+                  const isActive = location.pathname.startsWith(link.path);
+
+                  return (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      className={isActive ? 'active' : ''}
+                      style={{
+                        fontSize: '0.88rem',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {/* Right Section */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                <NotificationBell />
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="apple-btn-secondary"
+                >
+                  Logout
+                </button>
+              </div>
             </div>
-          </div>
-        </nav>
+          </nav>
+        </header>
       )}
 
       <main key={displayLocation.pathname} className={`page-transition-container ${transitionStage}`}>

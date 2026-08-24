@@ -1,21 +1,21 @@
 /* Aurora Seller Dashboard Products Page CSS */
 
 .apple-products-page {
-  --bg-color: #f9f9ff;
-  --text-main: #181c23;
-  --text-secondary: #5e5e63;
-  --primary-blue: #0059b5;
-  --primary-hover: #00458f;
-  --border-color: #c1c6d6;
-  --surface-white: #ffffff;
-  --surface-low: #f2f3fd;
-  --surface-container: #ecedf7;
-  --surface-high: #e6e8f2;
+  --bg-color: transparent;
+  --text-main: #000000;
+  --text-secondary: #0A0F1D;
+  --primary-blue: #4D669B;
+  --primary-hover: #3F5A90;
+  --border-color: #E3EAF4;
+  --surface-white: #FFFFFF;
+  --surface-low: #F8FAFC;
+  --surface-container: #EEF3FA;
+  --surface-high: #E2E8F0;
 
   background-color: var(--bg-color);
   color: var(--text-main);
   min-height: calc(100vh - 70px);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+
   -webkit-font-smoothing: antialiased;
 }
 
@@ -49,7 +49,7 @@
 
 .apple-products-title {
   font-size: 2rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-main);
   margin: 0 0 0.35rem;
   letter-spacing: -0.01em;
@@ -77,19 +77,20 @@
   justify-content: center;
   gap: 0.5rem;
   background-color: var(--primary-blue);
-  color: #ffffff;
+  color: #FFFFFF;
   border: none;
-  border-radius: 8px;
-  padding: 0.55rem 1.25rem;
+  border-radius: 14px;
+  padding: 0.6rem 1.25rem;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: background-color 0.15s ease;
+  box-shadow: 0 4px 14px rgba(77, 102, 155, 0.25);
+  transition: all 0.2s ease;
 }
 
 .apple-products-page .apple-btn-primary:hover {
   background-color: var(--primary-hover);
+  transform: translateY(-1px);
 }
 
 .apple-products-page .apple-btn-secondary {
@@ -97,32 +98,41 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background-color: var(--surface-white);
+  background-color: #EEF3FA;
   color: var(--text-main);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.55rem 1rem;
+  border-radius: 14px;
+  padding: 0.6rem 1rem;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .apple-products-page .apple-btn-secondary:hover {
-  border-color: var(--text-secondary);
-  background-color: var(--surface-low);
+  border-color: #CBD5E1;
+  background-color: #E2E8F0;
 }
 
 /* Search & Filter Bar Card */
 .apple-search-card {
-  background-color: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 1rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.04) 100%);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
+  padding: 1.1rem 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  gap: 0.75rem;
+  box-shadow: inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.7), 0 12px 36px rgba(25, 45, 90, 0.07), 0 2px 6px rgba(25, 45, 90, 0.03);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+
+.apple-search-card:hover {
+  transform: translateY(-1px);
+  box-shadow: inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.85), 0 16px 44px rgba(25, 45, 90, 0.11), 0 4px 10px rgba(25, 45, 90, 0.05);
+  border-color: rgba(255, 255, 255, 0.7);
 }
 
 .apple-search-row {
@@ -153,11 +163,11 @@
 
 .apple-search-input {
   width: 100%;
-  background-color: var(--surface-white);
-  border: 1px solid var(--border-color);
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   color: var(--text-main);
-  font-size: 0.92rem;
-  border-radius: 8px;
+  font-size: 0.9rem;
+  border-radius: 12px;
   padding: 0.6rem 1rem 0.6rem 2.5rem;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -165,14 +175,14 @@
 
 .apple-search-input:focus {
   border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(0, 89, 181, 0.12);
+  box-shadow: 0 0 0 3px rgba(77, 102, 155, 0.12);
 }
 
 .apple-meta-row {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
   padding-top: 0.75rem;
 }
 
@@ -197,35 +207,38 @@
 }
 
 .apple-select {
-  background-color: var(--bg-color);
-  border: 1px solid var(--border-color);
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   color: var(--text-main);
   font-size: 0.82rem;
   font-weight: 500;
-  border-radius: 8px;
-  padding: 0.45rem 2rem 0.45rem 0.85rem;
+  border-radius: 12px;
+  padding: 0.5rem 2rem 0.5rem 0.85rem;
   outline: none;
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235e5e63' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.65rem center;
   background-size: 14px;
 }
 
 .apple-select:hover {
-  border-color: var(--text-secondary);
+  border-color: rgba(255, 255, 255, 0.65);
 }
 
 /* Data Table Card Section */
 .apple-table-card {
-  background-color: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.04) 100%);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-shadow: inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.7), 0 12px 36px rgba(25, 45, 90, 0.07), 0 2px 6px rgba(25, 45, 90, 0.03);
 }
 
 .apple-table-scroll {
@@ -237,15 +250,15 @@
   height: 8px;
 }
 .apple-table-scroll::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: rgba(241, 245, 249, 0.15);
   border-radius: 4px;
 }
 .apple-table-scroll::-webkit-scrollbar-thumb {
-  background: #c1c6d6;
+  background: rgba(203, 213, 225, 0.5);
   border-radius: 4px;
 }
 .apple-table-scroll::-webkit-scrollbar-thumb:hover {
-  background: #717785;
+  background: #94A3B8;
 }
 
 .apple-table {
@@ -254,13 +267,15 @@
   border-collapse: separate;
   border-spacing: 0;
   min-width: 1500px;
+  background: transparent;
 }
 
 .apple-table thead {
-  background-color: var(--surface-low);
+  background-color: rgba(255, 255, 255, 0.08);
   position: sticky;
   top: 0;
   z-index: 10;
+  backdrop-filter: blur(20px) saturate(200%);
 }
 
 .apple-table th {
@@ -269,48 +284,52 @@
   color: var(--text-secondary);
   padding: 0.75rem 0.85rem;
   white-space: nowrap;
-  border-bottom: 1px solid var(--border-color);
-  background-color: var(--surface-low);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
 .apple-table td {
   padding: 0.85rem;
   font-size: 0.88rem;
   color: var(--text-main);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
   vertical-align: middle;
-  background-color: var(--bg-color);
+  background-color: transparent;
 }
 
 .apple-table tbody tr:hover td {
-  background-color: var(--surface-low);
+  background-color: rgba(255, 255, 255, 0.12);
 }
 
-/* Fix for Sticky Actions Column Overlap */
+/* Fix for Sticky Actions Column Overlap - Opaque background so scrolled headers/cells cannot bleed through */
 .apple-table thead th.apple-table-sticky-actions {
   position: sticky;
   right: 0;
-  background-color: #f2f3fd !important;
+  background: #D2E0F0 !important;
+  color: #1C2533 !important;
+  font-weight: 600 !important;
   z-index: 25 !important;
-  box-shadow: -4px 0 8px -2px rgba(0, 0, 0, 0.08);
+  box-shadow: -8px 0 16px -3px rgba(38, 63, 114, 0.16);
 }
 
 .apple-table tbody td.apple-table-sticky-actions {
   position: sticky;
   right: 0;
-  background-color: #f9f9ff !important;
+  background: #DFE9F5 !important;
+  color: #1C2533 !important;
   z-index: 15 !important;
-  box-shadow: -4px 0 8px -2px rgba(0, 0, 0, 0.08);
+  box-shadow: -8px 0 16px -3px rgba(38, 63, 114, 0.16);
 }
 
 .apple-table tbody tr:hover td.apple-table-sticky-actions {
-  background-color: #f2f3fd !important;
+  background: #D2E0F0 !important;
 }
 
 /* Pagination Footer */
 .apple-pagination-footer {
-  background-color: var(--surface-white);
-  border-top: 1px solid var(--border-color);
+  background-color: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px) saturate(200%);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
   padding: 0.75rem 1rem;
   display: flex;
   justify-content: space-between;

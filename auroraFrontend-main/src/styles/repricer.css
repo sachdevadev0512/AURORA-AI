@@ -1,19 +1,19 @@
 /* Apple-Inspired Repricer Page CSS */
 
 .repricer-page {
-  --bg-color: #FBFBFD;
-  --text-main: #1D1D1F;
-  --text-muted: #86868B;
-  --primary-blue: #0071e3;
-  --primary-hover: #0059b5;
-  --border-color: #E5E5EA;
+  --bg-color: transparent;
+  --text-main: #000000;
+  --text-muted: #0A0F1D;
+  --primary-blue: #4D669B;
+  --primary-hover: #3F5A90;
+  --border-color: #E8EEF6;
   --card-bg: #FFFFFF;
-  --table-header-bg: #F5F5F7;
+  --table-header-bg: #F8FAFC;
 
   background-color: var(--bg-color);
   color: var(--text-main);
-  min-height: calc(100vh - 70px);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  min-height: calc(100vh - 80px);
+
   -webkit-font-smoothing: antialiased;
 }
 
@@ -38,7 +38,7 @@
 
 .repricer-page h1 {
   font-size: 2rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-main);
   margin: 0 0 0.35rem;
   letter-spacing: -0.01em;
@@ -72,46 +72,52 @@
 }
 
 .repricer-page .pricing-kpi {
-  background-color: #FFFFFF;
-  border: 1px solid var(--border-color);
-  border-radius: 14px;
-  padding: 1.15rem 1.25rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.04) 100%);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
+  padding: 1.1rem 1.25rem;
+  box-shadow: inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.7), 0 12px 36px rgba(25, 45, 90, 0.07), 0 2px 6px rgba(25, 45, 90, 0.03);
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  gap: 0.25rem;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
 }
 
 .repricer-page .pricing-kpi:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transform: translateY(-2px);
+  box-shadow: inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.85), 0 16px 44px rgba(25, 45, 90, 0.11), 0 4px 10px rgba(25, 45, 90, 0.05);
+  border-color: rgba(255, 255, 255, 0.7);
 }
 
 .repricer-page .pricing-kpi span {
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  letter-spacing: 0.02em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748B;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 .repricer-page .pricing-kpi strong {
   font-size: 1.6rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-main);
   letter-spacing: -0.02em;
 }
 
 .repricer-kpi-danger {
-  color: #ff3b30 !important;
+  color: #DC2626 !important;
 }
 
 /* Wizard Card Container */
 .repricer-page .rp-wizard {
-  background-color: #FFFFFF;
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.04) 100%);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
+  box-shadow: inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.7), 0 12px 36px rgba(25, 45, 90, 0.07), 0 2px 6px rgba(25, 45, 90, 0.03);
   overflow: hidden;
   padding: 0;
   margin-bottom: 2rem;
@@ -121,12 +127,12 @@
 .repricer-page .rp-steps {
   list-style: none;
   margin: 0;
-  padding: 0.85rem 1rem;
+  padding: 1rem 1.25rem;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.75rem;
-  background-color: #F8F8FA;
-  border-bottom: 1px solid var(--border-color);
+  background-color: #F8FAFC;
+  border-bottom: 1px solid #E3EAF4;
 }
 
 .repricer-page .rp-steps button {
@@ -136,7 +142,7 @@
   align-items: center;
   text-align: left;
   border: 1px solid var(--border-color);
-  background-color: #FFFFFF;
+  background-color: var(--card-bg);
   color: var(--text-main);
   border-radius: 10px;
   padding: 0.75rem 1rem;
@@ -147,7 +153,7 @@
 
 .repricer-page .rp-steps button:hover {
   border-color: #C7C7CC;
-  background-color: #FFFFFF;
+  background-color: var(--card-bg);
 }
 
 .repricer-page .rp-steps li.is-active button {
@@ -169,7 +175,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background-color: #E5E5EA;
+  background-color: var(--border);
   color: var(--text-main);
   font-weight: 600;
   font-size: 0.85rem;
@@ -177,12 +183,12 @@
 
 .repricer-page .rp-steps li.is-active .rp-step-num {
   background-color: var(--primary-blue);
-  color: #FFFFFF;
+  color: var(--field-text);
 }
 
 .repricer-page .rp-steps li.is-done .rp-step-num {
   background-color: #34c759;
-  color: #FFFFFF;
+  color: var(--field-text);
 }
 
 .repricer-page .rp-steps strong {
@@ -231,7 +237,7 @@
 /* Mode Switcher Pills */
 .repricer-page .rp-mode-switch {
   display: inline-flex;
-  background-color: #F5F5F7;
+  background-color: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 999px;
   padding: 3px;
@@ -250,7 +256,7 @@
 }
 
 .repricer-page .rp-mode-switch button.is-active {
-  background-color: #FFFFFF;
+  background-color: var(--card-bg);
   color: var(--text-main);
   font-weight: 600;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
@@ -279,7 +285,7 @@
 .repricer-page .repricer-field input,
 .repricer-page .repricer-field select {
   width: 100%;
-  background-color: #FFFFFF;
+  background-color: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 0.55rem 0.85rem;
@@ -304,7 +310,7 @@
   padding: 1.25rem;
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  background-color: #FBFBFD;
+  background-color: transparent;
 }
 
 .repricer-page .rp-help {
@@ -328,7 +334,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  background-color: #FBFBFD;
+  background-color: transparent;
 }
 
 .repricer-page .rp-review-card span {
@@ -349,7 +355,7 @@
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1.15rem;
-  background-color: #FBFBFD;
+  background-color: transparent;
   margin-bottom: 1.5rem;
 }
 
@@ -366,7 +372,7 @@
 .repricer-page .rp-chip.muted {
   color: var(--text-muted);
   border-color: var(--border-color);
-  background-color: #FFFFFF;
+  background-color: var(--card-bg);
 }
 
 /* Wizard Footer */
@@ -377,7 +383,7 @@
   gap: 1rem;
   padding: 1.15rem 1.75rem;
   border-top: 1px solid var(--border-color);
-  background-color: #F8F8FA;
+  background-color: var(--card-bg);
   margin-top: 0;
 }
 

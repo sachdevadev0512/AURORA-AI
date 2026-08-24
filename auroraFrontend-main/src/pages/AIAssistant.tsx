@@ -81,7 +81,7 @@ export default function AIAssistant() {
                 width: '100%',
                 height: '100%',
                 border: 'none',
-                background: '#FFFFFF',
+                background: 'transparent',
               }}
             />
           ) : (

@@ -2,26 +2,28 @@
 
 .apple-auth-page {
   min-height: 100vh;
-  background-color: #FBFBFD;
+  background-color: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem 1.5rem;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  color: #1D1D1F;
+
+  color: #000000;
 }
 
 .apple-auth-card {
   width: 100%;
   max-width: 420px;
-  background-color: #FFFFFF;
-  border: 1px solid #E5E5EA;
-  border-radius: 16px;
-  padding: 2.5rem 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.04) 100%);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
+  padding: 2.25rem 2rem;
+  box-shadow: inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.7), 0 12px 36px rgba(25, 45, 90, 0.07), 0 2px 6px rgba(25, 45, 90, 0.03);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .apple-auth-logo {
@@ -33,10 +35,10 @@
 }
 
 .apple-auth-logo-box {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background-color: #0071e3;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background-color: #4D669B;
   color: #FFFFFF;
   display: flex;
   align-items: center;
@@ -47,8 +49,8 @@
 
 .apple-auth-title {
   font-size: 1.5rem;
-  font-weight: 600;
-  color: #1D1D1F;
+  font-weight: 700;
+  color: #1C2533;
   text-align: center;
   margin: 0 0 0.25rem;
   letter-spacing: -0.01em;
@@ -56,7 +58,7 @@
 
 .apple-auth-sub {
   font-size: 0.88rem;
-  color: #86868B;
+  color: #667085;
   text-align: center;
   margin: 0;
 }
@@ -76,39 +78,400 @@
 .apple-auth-label {
   font-size: 0.82rem;
   font-weight: 500;
-  color: #1D1D1F;
+  color: #1C2533;
 }
 
 .apple-auth-input {
   width: 100%;
   background-color: #FFFFFF;
-  border: 1px solid #E5E5EA;
-  border-radius: 8px;
-  padding: 0.65rem 0.85rem;
+  border: 1px solid #E3EAF4;
+  border-radius: 14px;
+  padding: 0.7rem 0.9rem;
   font-size: 0.9rem;
-  color: #1D1D1F;
+  color: #1C2533;
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .apple-auth-input:focus {
-  border-color: #0071e3;
-  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.12);
+  border-color: #4D669B;
+  box-shadow: 0 0 0 3px rgba(77, 102, 155, 0.18);
 }
 
 .apple-auth-footer {
   text-align: center;
   font-size: 0.85rem;
-  color: #86868B;
+  color: #667085;
   margin-top: 0.5rem;
 }
 
 .apple-auth-footer a {
-  color: #0071e3;
+  color: #4D669B;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .apple-auth-footer a:hover {
   text-decoration: underline;
+}
+
+/* Modal Styles */
+.apple-auth-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background-color: rgba(28, 37, 51, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-auth-modal-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.apple-auth-modal-content {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: #FFFFFF;
+  border: 1px solid #E3EAF4;
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 10px 40px rgba(38, 63, 114, 0.15);
+  color: #1C2533;
+  transform: scale(0.95) translateY(10px);
+  opacity: 0;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.apple-auth-modal-content.visible {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+
+.apple-auth-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  background: #EEF3FA;
+  border: 1px solid #E3EAF4;
+  color: #1C2533;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.apple-auth-modal-close:hover {
+  background: #E2E8F0;
+}
+
+/* Light mode overrides for modal elements */
+.apple-auth-modal-content .apple-auth-title {
+  color: #1C2533;
+}
+
+.apple-auth-modal-content .apple-auth-sub,
+.apple-auth-modal-content .apple-auth-footer {
+  color: #667085;
+}
+
+.apple-auth-modal-content .apple-auth-label {
+  color: #1C2533;
+}
+
+.apple-auth-modal-content .apple-auth-input {
+  background: #FFFFFF;
+  border: 1px solid #E3EAF4;
+  color: #1C2533;
+}
+
+.apple-auth-modal-content .apple-auth-input:focus {
+  border-color: #4D669B;
+  box-shadow: 0 0 0 3px rgba(77, 102, 155, 0.18);
+}
+
+.apple-auth-modal-content .apple-auth-logo-box {
+  background: #4D669B;
+  color: #FFFFFF;
+}
+
+.apple-auth-modal-content .apple-btn-primary {
+  background: #4D669B !important;
+  border: none !important;
+  border-radius: 14px !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 14px rgba(77, 102, 155, 0.25) !important;
+  transition: all 0.2s ease !important;
+}
+
+.apple-auth-modal-content .apple-btn-primary:hover {
+  background: #3F5A90 !important;
+  box-shadow: 0 6px 18px rgba(77, 102, 155, 0.35) !important;
+  transform: translateY(-1px);
+}
+
+.text-btn {
+  background: none;
+  border: none;
+  color: #4D669B;
+  font-weight: 600;
+  font-size: inherit;
+  font-family: inherit;
+  padding: 0;
+  cursor: pointer;
+}
+
+.text-btn:hover {
+  text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Aurora Landing Page Login/Signup Modal (Cosmic Glass)
+   Colors perfectly matched with the landing page palette
+═══════════════════════════════════════════════════════ */
+.aurora-auth-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: radial-gradient(ellipse at 50% 50%, rgba(1, 11, 19, 0.75) 0%, rgba(0, 4, 12, 0.85) 100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease-out;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.aurora-auth-modal-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.aurora-auth-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 410px;
+  background: rgba(8, 20, 35, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(100, 180, 240, 0.28);
+  border-radius: 18px;
+  padding: 2.25rem 2rem 2rem;
+  box-shadow: 
+    0 24px 60px rgba(0, 4, 14, 0.85),
+    0 0 40px rgba(30, 90, 150, 0.22),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  transform: scale(0.95);
+  transition: transform 200ms ease-out;
+  color: #f0f4fa;
+  font-family: 'Clash Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  box-sizing: border-box;
+}
+
+.aurora-auth-modal-card.visible {
+  transform: scale(1);
+}
+
+.aurora-auth-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: rgba(200, 230, 255, 0.65);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 150ms ease, transform 150ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aurora-auth-modal-close:hover {
+  color: #ffffff;
+  transform: scale(1.15);
+}
+
+.aurora-auth-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.aurora-auth-badge {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 0.85rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(30, 95, 160, 0.85), rgba(16, 52, 90, 0.95));
+  border: 1px solid rgba(140, 210, 255, 0.45);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Good Times', sans-serif;
+  font-weight: 400;
+  font-size: 1.2rem;
+  box-shadow: 0 0 20px rgba(50, 140, 230, 0.4);
+}
+
+.aurora-auth-title {
+  font-family: 'Clash Display', sans-serif;
+  font-size: 1.22rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 0.4rem;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 16px rgba(180, 220, 255, 0.5);
+}
+
+.aurora-auth-subtitle {
+  font-family: 'Clash Display', sans-serif;
+  font-size: 0.82rem;
+  color: rgba(210, 235, 255, 0.78);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.aurora-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.aurora-auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-align: left;
+}
+
+.aurora-auth-label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: rgba(210, 235, 255, 0.9);
+  letter-spacing: 0.02em;
+}
+
+.aurora-auth-input {
+  width: 100%;
+  padding: 10.5px 14px;
+  background: rgba(12, 28, 48, 0.65);
+  border: 1px solid rgba(80, 160, 200, 0.28);
+  border-radius: 10px;
+  color: #ffffff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+  box-sizing: border-box;
+}
+
+.aurora-auth-input::placeholder {
+  color: rgba(160, 195, 225, 0.45);
+}
+
+.aurora-auth-input:focus {
+  background: rgba(16, 38, 64, 0.85);
+  border-color: rgba(120, 210, 255, 0.75);
+  box-shadow: 0 0 16px rgba(60, 160, 240, 0.35);
+}
+
+.aurora-auth-alert {
+  padding: 8px 12px;
+  background: rgba(220, 38, 38, 0.22);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  border-radius: 8px;
+  color: #fca5a5;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* ── Primary CTA Button (Matches "Enter User Dashboard" CTA exactly) ── */
+.aurora-auth-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 42px;
+  margin-top: 0.4rem;
+  padding: 0 20px;
+  border: 1px solid rgba(150, 215, 255, 0.45);
+  border-radius: 9999px;
+  background: rgba(18, 52, 86, 0.68);
+  color: #ffffff;
+  font-family: 'Clash Display', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  text-shadow: 0 1px 6px rgba(0, 4, 12, 0.6);
+  box-shadow:
+    0 0 20px rgba(45, 140, 225, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.aurora-auth-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(185, 235, 255, 0.75);
+  background: rgba(26, 76, 122, 0.82);
+  box-shadow:
+    0 0 28px rgba(65, 160, 235, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.28);
+}
+
+.aurora-auth-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.aurora-auth-toggle-row {
+  margin-top: 1.25rem;
+  text-align: center;
+  font-size: 0.82rem;
+  color: rgba(200, 225, 250, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.aurora-auth-toggle-btn {
+  background: transparent;
+  border: none;
+  color: #7dd3fc;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 150ms ease;
+}
+
+.aurora-auth-toggle-btn:hover {
+  color: #ffffff;
 }

@@ -279,7 +279,7 @@ export default function Repricer() {
               Set min/max and strategy, reprice against competitors, and protect against Low Inventory Fee.
             </p>
           </div>
-          <div style={{ fontSize: '0.85rem', color: '#5e5e63', fontWeight: 500, alignSelf: 'center' }}>
+          <div style={{ fontSize: '0.85rem', color: 'var(--field-muted)', fontWeight: 500, alignSelf: 'center' }}>
             {selected.size} selected | {total} listings
           </div>
         </header>
@@ -322,7 +322,7 @@ export default function Repricer() {
             }}
           >
             <div>
-              <label style={{ display: 'block', fontSize: '0.78rem', color: '#5e5e63', marginBottom: '0.25rem', fontWeight: 500 }}>
+              <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--field-muted)', marginBottom: '0.25rem', fontWeight: 500 }}>
                 Min
               </label>
               <input
@@ -337,7 +337,7 @@ export default function Repricer() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.78rem', color: '#5e5e63', marginBottom: '0.25rem', fontWeight: 500 }}>
+              <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--field-muted)', marginBottom: '0.25rem', fontWeight: 500 }}>
                 Max
               </label>
               <input
@@ -352,7 +352,7 @@ export default function Repricer() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.78rem', color: '#5e5e63', marginBottom: '0.25rem', fontWeight: 500 }}>
+              <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--field-muted)', marginBottom: '0.25rem', fontWeight: 500 }}>
                 Apply price
               </label>
               <input
@@ -367,7 +367,7 @@ export default function Repricer() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.78rem', color: '#5e5e63', marginBottom: '0.25rem', fontWeight: 500 }}>
+              <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--field-muted)', marginBottom: '0.25rem', fontWeight: 500 }}>
                 Strategy
               </label>
               <select
@@ -385,7 +385,7 @@ export default function Repricer() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.78rem', color: '#5e5e63', marginBottom: '0.25rem', fontWeight: 500 }}>
+              <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--field-muted)', marginBottom: '0.25rem', fontWeight: 500 }}>
                 LIF raise %
               </label>
               <input
@@ -405,7 +405,7 @@ export default function Repricer() {
                 onChange={(e) => setForm((f) => ({ ...f, enabled: e.target.checked }))}
                 style={{ width: 16, height: 16, cursor: 'pointer' }}
               />
-              <label htmlFor="chk-auto" style={{ fontSize: '0.82rem', color: '#181c23', cursor: 'pointer', fontWeight: 500 }}>
+              <label htmlFor="chk-auto" style={{ fontSize: '0.82rem', color: 'var(--field-text)', cursor: 'pointer', fontWeight: 500 }}>
                 Auto
               </label>
             </div>
@@ -418,7 +418,7 @@ export default function Repricer() {
                 onChange={(e) => setForm((f) => ({ ...f, autoDisable: e.target.checked }))}
                 style={{ width: 16, height: 16, cursor: 'pointer' }}
               />
-              <label htmlFor="chk-lif" style={{ fontSize: '0.82rem', color: '#181c23', cursor: 'pointer', fontWeight: 500 }}>
+              <label htmlFor="chk-lif" style={{ fontSize: '0.82rem', color: 'var(--field-text)', cursor: 'pointer', fontWeight: 500 }}>
                 LIF protect
               </label>
             </div>
@@ -432,12 +432,12 @@ export default function Repricer() {
               alignItems: 'center',
               justifyContent: 'space-between',
               gap: '0.75rem',
-              borderTop: '1px solid #c1c6d6',
+              borderTop: '1px solid var(--border)',
               paddingTop: '0.85rem',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.78rem', color: '#5e5e63', fontWeight: 500 }}>Per page</span>
+              <span style={{ fontSize: '0.78rem', color: 'var(--field-muted)', fontWeight: 500 }}>Per page</span>
               <select
                 className="apple-select"
                 value={pageSize}
@@ -500,12 +500,12 @@ export default function Repricer() {
         {/* Selection Status Banner Card */}
         <section
           style={{
-            backgroundColor: '#f2f3fd',
-            border: '1px solid #c1c6d6',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid var(--border)',
             borderRadius: '10px',
             padding: '0.85rem 1.15rem',
             fontSize: '0.88rem',
-            color: '#181c23',
+            color: 'var(--field-text)',
             fontWeight: 500,
           }}
         >
@@ -523,22 +523,22 @@ export default function Repricer() {
                   <th style={{ width: '40px', textAlign: 'center' }}>
                     <input
                       type="checkbox"
-                      checked={allVisibleSelected}
+                      checked={products.length > 0 && selected.size === products.length}
                       onChange={toggleAllVisible}
                       style={{ cursor: 'pointer' }}
                     />
                   </th>
-                  <th style={{ width: '220px' }}>Product</th>
-                  <th style={{ width: '130px' }}>ASIN / SKU</th>
-                  <th style={{ width: '100px' }}>Fulfillment</th>
-                  <th style={{ width: '110px', textAlign: 'right' }}>Current Price</th>
-                  <th style={{ width: '100px', textAlign: 'right' }}>Min Price</th>
-                  <th style={{ width: '100px', textAlign: 'right' }}>Max Price</th>
-                  <th style={{ width: '130px' }}>Strategy</th>
-                  <th style={{ width: '90px', textAlign: 'right' }}>LIF Raise %</th>
-                  <th style={{ width: '80px', textAlign: 'center' }}>Auto</th>
-                  <th style={{ width: '90px', textAlign: 'center' }}>LIF Protect</th>
-                  <th className="apple-table-sticky-actions" style={{ width: '90px', textAlign: 'center' }}>
+                  <th style={{ minWidth: '300px', width: '100%' }}>Product</th>
+                  <th style={{ minWidth: '150px' }}>ASIN / SKU</th>
+                  <th style={{ minWidth: '110px' }}>Fulfillment</th>
+                  <th style={{ minWidth: '130px', textAlign: 'right' }}>Current Price</th>
+                  <th style={{ minWidth: '110px', textAlign: 'right' }}>Min Price</th>
+                  <th style={{ minWidth: '110px', textAlign: 'right' }}>Max Price</th>
+                  <th style={{ minWidth: '150px' }}>Strategy</th>
+                  <th style={{ minWidth: '110px', textAlign: 'right' }}>LIF Raise %</th>
+                  <th style={{ minWidth: '90px', textAlign: 'center' }}>Auto</th>
+                  <th style={{ minWidth: '110px', textAlign: 'center' }}>LIF Protect</th>
+                  <th className="apple-table-sticky-actions" style={{ minWidth: '90px', textAlign: 'center' }}>
                     Actions
                   </th>
                 </tr>
@@ -546,14 +546,14 @@ export default function Repricer() {
               <tbody>
                 {loading && products.length === 0 ? (
                   <tr>
-                    <td colSpan={12} style={{ textAlign: 'center', padding: '4rem 1rem', color: '#5e5e63' }}>
+                    <td colSpan={12} style={{ textAlign: 'center', padding: '4rem 1rem', color: 'var(--field-muted)' }}>
                       Loading repricer catalog...
                     </td>
                   </tr>
                 ) : products.length === 0 ? (
                   <tr>
                     <td colSpan={12} style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#5e5e63' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: 'var(--field-muted)' }}>
                         <span className="material-symbols-outlined" style={{ fontSize: '48px', opacity: 0.35, marginBottom: '0.5rem' }}>
                           inventory_2
                         </span>
@@ -577,12 +577,12 @@ export default function Repricer() {
                           />
                         </td>
                         <td>
-                          <div style={{ fontWeight: 600, color: '#181c23', fontSize: '0.88rem' }}>
+                          <div style={{ fontWeight: 600, color: 'var(--field-text)', fontSize: '0.88rem' }}>
                             {product.title}
                           </div>
                         </td>
                         <td>
-                          <div style={{ fontSize: '0.78rem', color: '#5e5e63' }}>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--field-muted)' }}>
                             ASIN: {product.asin}
                             <br />
                             SKU: {product.sku}

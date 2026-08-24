@@ -16,3 +16,5 @@ build/
 npm-debug.log*
 .DS_Store
 Thumbs.db
+*.zip
+*.timestamp-*.mjs

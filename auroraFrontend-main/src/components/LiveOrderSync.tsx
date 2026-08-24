@@ -188,7 +188,7 @@ export const LiveOrderSync = ({ userId, onOrdersUpdate }: { userId: string; onOr
       <style>{`
         .live-order-sync {
           padding: 1rem;
-          background: #f5f5f5;
+          background: var(--card-bg);
           border-radius: 8px;
         }
 
@@ -198,7 +198,7 @@ export const LiveOrderSync = ({ userId, onOrdersUpdate }: { userId: string; onOr
           gap: 0.5rem;
           margin-bottom: 1rem;
           padding: 0.5rem;
-          background: white;
+          background: var(--card-bg);
           border-radius: 4px;
           font-weight: 600;
         }
@@ -263,7 +263,7 @@ export const LiveOrderSync = ({ userId, onOrdersUpdate }: { userId: string; onOr
         }
 
         .btn-outline {
-          background: white;
+          background: transparent;
           border: 2px solid #2196f3;
           color: #2196f3;
         }
@@ -274,7 +274,7 @@ export const LiveOrderSync = ({ userId, onOrdersUpdate }: { userId: string; onOr
 
         .status-display {
           padding: 1rem;
-          background: white;
+          background: var(--card-bg);
           border-radius: 4px;
           margin-bottom: 1rem;
         }
@@ -285,7 +285,7 @@ export const LiveOrderSync = ({ userId, onOrdersUpdate }: { userId: string; onOr
 
         .error-message {
           padding: 1rem;
-          background: #ffebee;
+          background: rgba(244, 67, 54, 0.1);
           border-left: 4px solid #f44336;
           color: #c62828;
           margin-bottom: 1rem;
@@ -293,7 +293,7 @@ export const LiveOrderSync = ({ userId, onOrdersUpdate }: { userId: string; onOr
         }
 
         .synced-orders {
-          background: white;
+          background: var(--card-bg);
           border-radius: 4px;
           overflow: hidden;
         }

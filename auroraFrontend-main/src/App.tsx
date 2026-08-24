@@ -32,6 +32,7 @@ function App() {
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
       <Route path="/amazon-oauth-callback" element={<AmazonOAuthCallback />} />
+      <Route path="/" element={<Home />} />
       <Route
         path="/*"
         element={
@@ -39,25 +40,24 @@ function App() {
             <NotificationProvider>
               <Layout>
                 <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/products/:id" element={<ProductDetail />} />
-                <Route path="/orders" element={<Orders />} />
-                <Route path="/orders/:id" element={<OrderDetail />} />
-                <Route path="/shipments" element={<Shipments />} />
-                <Route path="/shipments/:id" element={<ShipmentDetail />} />
-                <Route path="/ads" element={<Ads />} />
-                <Route path="/ads/create" element={<CreateCampaign />} />
-                <Route path="/ads/:id" element={<AdDetail />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/integration" element={<AmazonIntegration />} />
-                <Route path="/ai" element={<AIAssistant />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/repricer" element={<Repricer />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Layout>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/products/:id" element={<ProductDetail />} />
+                  <Route path="/orders" element={<Orders />} />
+                  <Route path="/orders/:id" element={<OrderDetail />} />
+                  <Route path="/shipments" element={<Shipments />} />
+                  <Route path="/shipments/:id" element={<ShipmentDetail />} />
+                  <Route path="/ads" element={<Ads />} />
+                  <Route path="/ads/create" element={<CreateCampaign />} />
+                  <Route path="/ads/:id" element={<AdDetail />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/integration" element={<AmazonIntegration />} />
+                  <Route path="/ai" element={<AIAssistant />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/repricer" element={<Repricer />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Layout>
             </NotificationProvider>
           </ProtectedRoute>
         }

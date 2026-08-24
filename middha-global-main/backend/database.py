@@ -97,42 +97,45 @@ def _user_oid() -> ObjectId:
 
 async def init_db():
     """Create indexes if they don't exist. Safe to run repeatedly."""
-    await _conversations().create_index([("userId", 1), ("updatedAt", -1)])
-    await _conversations().create_index(
-        [("convId", 1), ("userId", 1)], unique=True
-    )
-    await _cogs().create_index([("userId", 1), ("sku", 1)], unique=True)
-    await _sales_daily().create_index(
-        [("userId", 1), ("sku", 1), ("date", 1)], unique=True
-    )
-    await _sales_daily().create_index([("userId", 1), ("date", -1)])
-    await _inventory_snapshot().create_index(
-        [("userId", 1), ("sku", 1), ("date", 1)], unique=True
-    )
-    await _forecast_cache().create_index(
-        [("userId", 1), ("sku", 1)], unique=True
-    )
-    await _forecast_settings().create_index([("userId", 1)], unique=True)
-    await _storage_cache().create_index([("userId", 1)], unique=True)
-    await _placement_fee_cache().create_index(
-        [("userId", 1)], unique=True
-    )
-    await _aged_inventory_cache().create_index(
-        [("userId", 1)], unique=True
-    )
-    await _aged_surcharge_charges_cache().create_index(
-        [("userId", 1)], unique=True
-    )
-    await _removal_fees_cache().create_index(
-        [("userId", 1)], unique=True
-    )
-    await _product_settings().create_index(
-        [("userId", 1), ("sku", 1)], unique=True
-    )
-    await _purchase_orders().create_index(
-        [("userId", 1), ("poId", 1)], unique=True
-    )
-    await _purchase_orders().create_index([("userId", 1), ("sku", 1), ("status", 1)])
+    try:
+        await _conversations().create_index([("userId", 1), ("updatedAt", -1)])
+        await _conversations().create_index(
+            [("convId", 1), ("userId", 1)], unique=True
+        )
+        await _cogs().create_index([("userId", 1), ("sku", 1)], unique=True)
+        await _sales_daily().create_index(
+            [("userId", 1), ("sku", 1), ("date", 1)], unique=True
+        )
+        await _sales_daily().create_index([("userId", 1), ("date", -1)])
+        await _inventory_snapshot().create_index(
+            [("userId", 1), ("sku", 1), ("date", 1)], unique=True
+        )
+        await _forecast_cache().create_index(
+            [("userId", 1), ("sku", 1)], unique=True
+        )
+        await _forecast_settings().create_index([("userId", 1)], unique=True)
+        await _storage_cache().create_index([("userId", 1)], unique=True)
+        await _placement_fee_cache().create_index(
+            [("userId", 1)], unique=True
+        )
+        await _aged_inventory_cache().create_index(
+            [("userId", 1)], unique=True
+        )
+        await _aged_surcharge_charges_cache().create_index(
+            [("userId", 1)], unique=True
+        )
+        await _removal_fees_cache().create_index(
+            [("userId", 1)], unique=True
+        )
+        await _product_settings().create_index(
+            [("userId", 1), ("sku", 1)], unique=True
+        )
+        await _purchase_orders().create_index(
+            [("userId", 1), ("poId", 1)], unique=True
+        )
+        await _purchase_orders().create_index([("userId", 1), ("sku", 1), ("status", 1)])
+    except Exception as e:
+        print(f"[Database] Warning: MongoDB index init skipped ({e})")
 
 
 # ── Conversations ────────────────────────────────────────────────────────

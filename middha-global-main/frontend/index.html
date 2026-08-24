@@ -9,8 +9,16 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f0f2f5;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #E2EBF6;
+      background-image: 
+        radial-gradient(at 88% 0%, rgba(55, 88, 148, 0.38) 0px, transparent 55%),
+        radial-gradient(at 15% 10%, rgba(165, 195, 235, 0.6) 0px, transparent 48%),
+        radial-gradient(at 55% 35%, rgba(215, 228, 245, 0.7) 0px, transparent 60%),
+        radial-gradient(at 90% 90%, rgba(175, 202, 236, 0.35) 0px, transparent 50%),
+        linear-gradient(180deg, #D0DEF0 0%, #E2EAF5 35%, #EFF4FA 100%);
+      background-attachment: fixed;
+      color: #1C2533;
       height: 100vh;
       display: flex;
     }
@@ -18,8 +26,11 @@
     /* ── Sidebar ───────────────────────────────────────── */
     #sidebar {
       width: 260px;
-      background: #1a1a2e;
-      color: #fff;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-right: 1px solid rgba(210, 220, 235, 0.8);
+      color: #1C2533;
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
@@ -27,22 +38,23 @@
 
     #sidebar-header {
       padding: 16px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid rgba(210, 220, 235, 0.8);
     }
 
     #new-chat-btn {
       width: 100%;
       padding: 10px 16px;
-      background: rgba(255,255,255,0.1);
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 8px;
+      background: #EEF3FA;
+      color: #1C2533;
+      border: 1px solid #E8EEF6;
+      border-radius: 14px;
       font-size: 14px;
+      font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    #new-chat-btn:hover { background: rgba(255,255,255,0.2); }
+    #new-chat-btn:hover { background: #E2E8F0; }
 
     #session-list {
       flex: 1;
@@ -55,7 +67,7 @@
       border-radius: 8px;
       cursor: pointer;
       font-size: 13px;
-      color: rgba(255,255,255,0.8);
+      color: #475569;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -63,8 +75,8 @@
       margin-bottom: 2px;
     }
 
-    .session-item:hover { background: rgba(255,255,255,0.1); }
-    .session-item.active { background: rgba(255,255,255,0.15); color: #fff; }
+    .session-item:hover { background: rgba(59, 84, 136, 0.08); }
+    .session-item.active { background: rgba(59, 84, 136, 0.14); color: #1C2533; font-weight: 600; }
 
     .session-title {
       overflow: hidden;
@@ -76,7 +88,7 @@
     .delete-session-btn {
       background: none;
       border: none;
-      color: rgba(255,255,255,0.4);
+      color: #94A3B8;
       cursor: pointer;
       font-size: 16px;
       padding: 0 4px;
@@ -93,17 +105,21 @@
       display: flex;
       flex-direction: column;
       min-width: 0;
+      background: transparent;
     }
 
     header {
-      background: #1a1a2e;
-      color: #fff;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      color: #1C2533;
       padding: 16px 24px;
       font-size: 18px;
       font-weight: 600;
       display: flex;
       align-items: center;
       gap: 10px;
+      border-bottom: 1px solid rgba(210, 220, 235, 0.8);
     }
 
     header span { font-size: 22px; }
@@ -129,26 +145,30 @@
 
     .message.user {
       align-self: flex-end;
-      background: #1a1a2e;
+      background: #3B5488;
       color: #fff;
       border-bottom-right-radius: 4px;
+      box-shadow: 0 4px 14px rgba(25, 45, 90, 0.12);
     }
 
     .message.assistant {
       align-self: flex-start;
-      background: #fff;
-      color: #1a1a1a;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      color: #1C2533;
+      border: 1px solid rgba(255, 255, 255, 0.95);
       border-bottom-left-radius: 4px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 1), 0 4px 16px rgba(25, 45, 90, 0.06);
     }
 
     .message.assistant.streaming {
-      border-left: 3px solid #4a6cf7;
+      border-left: 3px solid #3B5488;
     }
 
     .tool-indicator {
       font-size: 12px;
-      color: #4a6cf7;
+      color: #64748B;
       font-style: italic;
       margin-top: 4px;
     }
@@ -156,18 +176,20 @@
     .tool-result-card {
       align-self: flex-start;
       max-width: 85%;
-      background: #f8f9fb;
-      border-left: 4px solid #4a6cf7;
-      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(210, 220, 235, 0.8);
+      border-left: 4px solid #3B5488;
+      border-radius: 12px;
       padding: 12px 16px;
       font-size: 13px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      color: #1C2533;
+      box-shadow: 0 4px 14px rgba(25, 45, 90, 0.05);
     }
 
     .tool-result-header {
       font-size: 11px;
       font-weight: 700;
-      color: #4a6cf7;
+      color: #3B5488;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 8px;
@@ -190,27 +212,34 @@
 
     #input-area {
       padding: 16px 24px;
-      background: #fff;
-      border-top: 1px solid #e0e0e0;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(210, 220, 235, 0.8);
       display: flex;
       gap: 12px;
     }
 
     #message-input {
       flex: 1;
-      padding: 12px 16px;
-      border: 1px solid #d0d0d0;
+      padding: 12px 18px;
+      background: #FFFFFF;
+      border: 1px solid rgba(210, 220, 235, 0.9);
+      color: #1C2533;
       border-radius: 24px;
       font-size: 14px;
       outline: none;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
     }
 
-    #message-input:focus { border-color: #4a6cf7; }
+    #message-input::placeholder { color: #64748B; }
+
+    #message-input:focus { border-color: #3B5488; box-shadow: 0 0 0 3px rgba(59, 84, 136, 0.12); }
 
     #send-btn {
       padding: 12px 24px;
-      background: #1a1a2e;
+      background: #3B5488;
       color: #fff;
       border: none;
       border-radius: 24px;
@@ -220,19 +249,19 @@
       transition: background 0.2s;
     }
 
-    #send-btn:hover { background: #16213e; }
-    #send-btn:disabled { background: #999; cursor: not-allowed; }
+    #send-btn:hover { background: #2D426E; }
+    #send-btn:disabled { background: rgba(210, 220, 235, 0.5); color: #94A3B8; cursor: not-allowed; }
 
     .welcome {
       text-align: center;
-      color: #888;
+      color: #64748B;
       margin-top: 60px;
       font-size: 15px;
       line-height: 2;
     }
 
     .welcome h2 {
-      color: #1a1a2e;
+      color: #1C2533;
       margin-bottom: 8px;
       font-size: 22px;
     }
@@ -385,8 +414,10 @@
     /* ── Tab nav + Restock view ─────────────────────────── */
     #tab-nav {
       display: flex;
-      background: #fff;
-      border-bottom: 1px solid #e0e0e0;
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(210, 220, 235, 0.8);
       padding: 0 24px;
       gap: 4px;
     }
@@ -397,12 +428,12 @@
       border-bottom: 2px solid transparent;
       font-size: 13px;
       font-weight: 600;
-      color: #777;
+      color: #64748B;
       cursor: pointer;
       transition: color 0.15s, border-color 0.15s;
     }
-    .tab-btn:hover { color: #1a1a2e; }
-    .tab-btn.active { color: #1a1a2e; border-bottom-color: #4a6cf7; }
+    .tab-btn:hover { color: #1C2533; }
+    .tab-btn.active { color: #3B5488; border-bottom-color: #3B5488; background: rgba(59, 84, 136, 0.08); }
 
     #restock-view {
       flex: 1;
@@ -422,12 +453,12 @@
     }
     #restock-toolbar h2 {
       font-size: 18px;
-      color: #1a1a2e;
+      color: #1C2533;
       margin-right: auto;
     }
     #restock-toolbar button {
       padding: 8px 14px;
-      background: #1a1a2e;
+      background: #0059b5;
       color: #fff;
       border: none;
       border-radius: 8px;
@@ -435,9 +466,9 @@
       cursor: pointer;
     }
     #restock-toolbar button.secondary {
-      background: #fff;
-      color: #1a1a2e;
-      border: 1px solid #d0d0d0;
+      background: #051525;
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.15);
     }
     #restock-toolbar button:disabled { opacity: 0.6; cursor: not-allowed; }
     #restock-stamp { font-size: 12px; color: #888; }
@@ -1189,47 +1220,55 @@
 
     /* ── Embedded in Aurora dashboard (must be last) ───── */
     body.embedded-in-aurora {
-      height: 100%;
-      min-height: 100%;
-      background: #0f172a;
-      color: #e2e8f0;
+      background-color: #E2EBF6;
+      background-image: 
+        radial-gradient(at 88% 0%, rgba(55, 88, 148, 0.38) 0px, transparent 55%),
+        radial-gradient(at 15% 10%, rgba(165, 195, 235, 0.6) 0px, transparent 48%),
+        radial-gradient(at 55% 35%, rgba(215, 228, 245, 0.7) 0px, transparent 60%),
+        radial-gradient(at 90% 90%, rgba(175, 202, 236, 0.35) 0px, transparent 50%),
+        linear-gradient(180deg, #D0DEF0 0%, #E2EAF5 35%, #EFF4FA 100%);
+      background-attachment: fixed;
+      color: #1C2533;
     }
     body.embedded-in-aurora #sidebar {
-      width: 240px;
-      background: #0b1220;
-      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-right: 1px solid rgba(210, 220, 235, 0.8);
     }
-    body.embedded-in-aurora #sidebar-header { padding: 12px; }
+    body.embedded-in-aurora #sidebar-header { padding: 14px; }
     body.embedded-in-aurora #new-chat-btn {
-      background: rgba(30, 139, 255, 0.16);
-      border-color: rgba(30, 139, 255, 0.35);
-      color: #dbeafe;
-      border-radius: 10px;
+      background: #3B5488;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+      border-radius: 12px;
       font-weight: 600;
     }
-    body.embedded-in-aurora #new-chat-btn:hover { background: rgba(30, 139, 255, 0.28); }
-    body.embedded-in-aurora .session-item { border-radius: 10px; color: #cbd5e1; }
+    body.embedded-in-aurora #new-chat-btn:hover { background: #2D426E; }
+    body.embedded-in-aurora .session-item { border-radius: 10px; color: #475569; }
     body.embedded-in-aurora .session-item:hover,
     body.embedded-in-aurora .session-item.active {
-      background: rgba(30, 139, 255, 0.14);
-      color: #fff;
+      background: rgba(59, 84, 136, 0.12);
+      color: #1C2533;
+      font-weight: 600;
     }
     body.embedded-in-aurora #cogs-panel,
     body.embedded-in-aurora #sidebar-footer,
     body.embedded-in-aurora #main > header {
       display: none !important;
     }
-    body.embedded-in-aurora #main { background: #0f172a; }
+    body.embedded-in-aurora #main { background: transparent; }
     body.embedded-in-aurora #tab-nav {
-      background: #111827;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(210, 220, 235, 0.8);
       gap: 4px;
       padding: 8px 12px 0;
       overflow-x: auto;
     }
     body.embedded-in-aurora .tab-btn {
-      background: transparent !important;
-      color: #94a3b8 !important;
+      color: #64748B !important;
       border: none !important;
       border-bottom: 2px solid transparent !important;
       border-radius: 8px 8px 0 0;
@@ -1239,145 +1278,163 @@
       white-space: nowrap;
     }
     body.embedded-in-aurora .tab-btn:hover {
-      color: #e2e8f0 !important;
-      background: rgba(255, 255, 255, 0.04) !important;
+      color: #1C2533 !important;
+      background: rgba(59, 84, 136, 0.08) !important;
     }
     body.embedded-in-aurora .tab-btn.active {
-      color: #93c5fd !important;
-      border-bottom-color: #1e8bff !important;
-      background: rgba(30, 139, 255, 0.1) !important;
+      color: #3B5488 !important;
+      border-bottom-color: #3B5488 !important;
+      background: rgba(59, 84, 136, 0.12) !important;
     }
     body.embedded-in-aurora #chat-container,
     body.embedded-in-aurora #restock-view,
     body.embedded-in-aurora #orders-view,
     body.embedded-in-aurora #campaigns-view,
     body.embedded-in-aurora #profit-view,
-    body.embedded-in-aurora #cogs-view {
-      background: #0f172a;
-      color: #e2e8f0;
+    body.embedded-in-aurora #cogs-view,
+    body.embedded-in-aurora #keywords-view {
+      background: #F6F8FC;
+      color: #1C2533;
     }
-    body.embedded-in-aurora .welcome { color: #94a3b8; margin-top: 48px; }
-    body.embedded-in-aurora .welcome h2 { color: #f8fafc !important; font-size: 1.35rem; }
+    body.embedded-in-aurora .welcome { color: #667085; margin-top: 48px; }
+    body.embedded-in-aurora .welcome h2 { color: #1C2533 !important; font-size: 1.35rem; font-weight: 800; }
     body.embedded-in-aurora .message.user {
-      background: linear-gradient(135deg, #1e8bff, #2563eb);
-      color: #fff;
-      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+      background: #4D669B;
+      color: #ffffff;
+      box-shadow: 0 4px 16px rgba(77, 102, 155, 0.25);
+      border-radius: 16px 16px 4px 16px;
     }
     body.embedded-in-aurora .message.assistant {
-      background: #1e293b;
-      color: #e2e8f0;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: none;
+      background: #FFFFFF;
+      color: #1C2533;
+      border: 1px solid #E8EEF6;
+      box-shadow: 0 4px 20px rgba(41, 72, 152, 0.05);
+      border-radius: 16px 16px 16px 4px;
     }
-    body.embedded-in-aurora .message.assistant.streaming { border-left: 3px solid #1e8bff; }
+    body.embedded-in-aurora .message.assistant.streaming { border-left: 3px solid #4D669B; }
     body.embedded-in-aurora .tool-result-card {
-      background: #111827;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-left: 4px solid #1e8bff;
-      color: #cbd5e1;
+      background: #FFFFFF;
+      border: 1px solid #E8EEF6;
+      border-left: 4px solid #4D669B;
+      color: #1C2533;
+      box-shadow: 0 4px 16px rgba(41, 72, 152, 0.04);
+      border-radius: 14px;
     }
-    body.embedded-in-aurora .tool-result-header { color: #93c5fd; }
-    body.embedded-in-aurora .tool-result-body { color: #cbd5e1; }
-    body.embedded-in-aurora .tool-indicator { color: #93c5fd; }
+    body.embedded-in-aurora .tool-result-header { color: #1C2533; font-weight: 700; }
+    body.embedded-in-aurora .tool-result-body { color: #475569; }
+    body.embedded-in-aurora .tool-indicator { color: #667085; }
     body.embedded-in-aurora #input-area {
-      background: #111827;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: #FFFFFF;
+      border-top: 1px solid #E8EEF6;
       padding: 14px 18px;
     }
     body.embedded-in-aurora #message-input {
-      background: #0f172a;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: #f8fafc;
-      border-radius: 12px;
+      background: #FFFFFF;
+      border: 1px solid #E8EEF6;
+      color: #1C2533;
+      border-radius: 14px;
     }
-    body.embedded-in-aurora #message-input::placeholder { color: #64748b; }
+    body.embedded-in-aurora #message-input::placeholder { color: #94A3B8; }
     body.embedded-in-aurora #message-input:focus {
-      border-color: #1e8bff;
-      box-shadow: 0 0 0 3px rgba(30, 139, 255, 0.18);
+      border-color: #4D669B;
+      box-shadow: 0 0 0 4px rgba(77, 102, 155, 0.15);
     }
     body.embedded-in-aurora #send-btn {
-      background: #1e8bff;
-      border-radius: 12px;
+      background: #4D669B;
+      color: #ffffff;
+      border-radius: 14px;
       padding: 12px 20px;
+      font-weight: 600;
+      box-shadow: 0 4px 14px rgba(77, 102, 155, 0.25);
     }
-    body.embedded-in-aurora #send-btn:hover { background: #1570d4; }
-    body.embedded-in-aurora #send-btn:disabled { background: #334155; color: #94a3b8; }
+    body.embedded-in-aurora #send-btn:hover { background: #3F5A90; }
+    body.embedded-in-aurora #send-btn:disabled { background: #E2E8F0; color: #94A3B8; }
 
-    /* Data tabs — dark cards so table text stays readable in Aurora embed */
+    /* Data tabs — crystal clear frosty glass cards */
     body.embedded-in-aurora #restock-table-wrap,
     body.embedded-in-aurora #orders-table-wrap,
     body.embedded-in-aurora #campaigns-table-wrap,
     body.embedded-in-aurora #profit-table-wrap {
-      background: #1e293b;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.04) 100%);
+      backdrop-filter: blur(24px) saturate(200%);
+      -webkit-backdrop-filter: blur(24px) saturate(200%);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow: inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.7), 0 12px 40px rgba(41, 72, 152, 0.07);
+      border-radius: 24px;
     }
     body.embedded-in-aurora table.restock thead th {
-      background: #0f172a;
-      color: #94a3b8;
-      border-bottom-color: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px) saturate(200%);
+      color: #667085;
+      border-bottom-color: rgba(255, 255, 255, 0.3);
     }
     body.embedded-in-aurora table.restock tbody tr {
-      border-bottom-color: rgba(255, 255, 255, 0.06);
+      border-bottom-color: rgba(255, 255, 255, 0.18);
     }
-    body.embedded-in-aurora table.restock tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.02); }
-    body.embedded-in-aurora table.restock tbody tr:hover { background: rgba(30, 139, 255, 0.1); }
+    body.embedded-in-aurora table.restock tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.03); }
+    body.embedded-in-aurora table.restock tbody tr:hover { background: rgba(255, 255, 255, 0.12); }
     body.embedded-in-aurora table.restock td {
-      color: #f1f5f9;
-      border-color: rgba(255, 255, 255, 0.06);
+      color: #1C2533;
+      border-color: rgba(255, 255, 255, 0.18);
+      background-color: transparent;
     }
     body.embedded-in-aurora table.restock td.sku-cell {
-      border-right-color: rgba(255, 255, 255, 0.08);
-      background: #1e293b;
+      border-right-color: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(20px);
     }
-    body.embedded-in-aurora table.restock tbody tr:nth-child(even) td.sku-cell { background: #1a2332; }
-    body.embedded-in-aurora table.restock tbody tr:hover td.sku-cell { background: #1e3a5f; }
-    body.embedded-in-aurora table.restock .sku-name { color: #f8fafc; }
-    body.embedded-in-aurora table.restock .num { color: #e2e8f0; }
-    body.embedded-in-aurora table.restock .num-strong { color: #93c5fd; }
-    body.embedded-in-aurora table.restock .date-cell { color: #cbd5e1; }
-    body.embedded-in-aurora table.restock .next-arrival { color: #cbd5e1; }
-    body.embedded-in-aurora table.restock .next-arrival strong { color: #f8fafc; }
-    body.embedded-in-aurora table.restock .next-arrival-none { color: #64748b; }
-    body.embedded-in-aurora .urgency-red    { background: rgba(239, 68, 68, 0.18); color: #fca5a5; border-color: rgba(239, 68, 68, 0.35); }
-    body.embedded-in-aurora .urgency-orange { background: rgba(249, 115, 22, 0.18); color: #fdba74; border-color: rgba(249, 115, 22, 0.35); }
-    body.embedded-in-aurora .urgency-amber  { background: rgba(234, 179, 8, 0.18); color: #fde047; border-color: rgba(234, 179, 8, 0.35); }
-    body.embedded-in-aurora .urgency-green  { background: rgba(34, 197, 94, 0.18); color: #86efac; border-color: rgba(34, 197, 94, 0.35); }
-    body.embedded-in-aurora .urgency-grey   { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border-color: rgba(148, 163, 184, 0.3); }
+    body.embedded-in-aurora table.restock tbody tr:nth-child(even) td.sku-cell { background: rgba(255, 255, 255, 0.1); }
+    body.embedded-in-aurora table.restock tbody tr:hover td.sku-cell { background: rgba(255, 255, 255, 0.22); }
+    body.embedded-in-aurora table.restock .sku-name { color: #1C2533; font-weight: 600; }
+    body.embedded-in-aurora table.restock .num { color: #334155; }
+    body.embedded-in-aurora table.restock .num-strong { color: #1C2533; }
+    body.embedded-in-aurora table.restock .date-cell { color: #667085; }
+    body.embedded-in-aurora table.restock .next-arrival { color: #667085; }
+    body.embedded-in-aurora table.restock .next-arrival strong { color: #1C2533; }
+    body.embedded-in-aurora table.restock .next-arrival-none { color: #94A3B8; }
+    body.embedded-in-aurora .urgency-red    { background: #FEF2F2; color: #DC2626; border-color: #FCA5A5; }
+    body.embedded-in-aurora .urgency-orange { background: #FFF7ED; color: #EA580C; border-color: #FFEDD5; }
+    body.embedded-in-aurora .urgency-amber  { background: #FFFBEB; color: #D97706; border-color: #FDE68A; }
+    body.embedded-in-aurora .urgency-green  { background: #ECFDF5; color: #059669; border-color: #A7F3D0; }
+    body.embedded-in-aurora .urgency-grey   { background: #F3F4F6; color: #6B7280; border-color: #E5E7EB; }
 
     body.embedded-in-aurora #profit-table-wrap tfoot td {
-      background: #0f172a;
-      color: #f8fafc;
-      border-top: 2px solid rgba(30, 139, 255, 0.4);
-      box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.35);
+      background: #F8FAFC;
+      color: #1C2533;
+      border-top: 2px solid #4D669B;
+      box-shadow: 0 -4px 16px rgba(38, 63, 114, 0.05);
     }
     body.embedded-in-aurora #profit-table-wrap tfoot .profit-totals-label {
-      color: #93c5fd;
+      color: #1C2533;
+      font-weight: 700;
     }
-    body.embedded-in-aurora #profit-table-wrap tfoot .num { color: #f1f5f9; }
-    body.embedded-in-aurora table.restock.profit tbody td { color: #f1f5f9; }
+    body.embedded-in-aurora #profit-table-wrap tfoot .num { color: #1C2533; }
+    body.embedded-in-aurora table.restock.profit tbody td { color: #1C2533; }
     body.embedded-in-aurora table.restock.profit a.profit-price-link {
-      color: #f1f5f9;
+      color: #4D669B;
     }
-    body.embedded-in-aurora .margin-good { color: #86efac !important; }
-    body.embedded-in-aurora .margin-warn { color: #fdba74 !important; }
-    body.embedded-in-aurora .margin-bad  { color: #fca5a5 !important; }
+    body.embedded-in-aurora .margin-good { color: #059669 !important; }
+    body.embedded-in-aurora .margin-warn { color: #D97706 !important; }
+    body.embedded-in-aurora .margin-bad  { color: #DC2626 !important; }
     body.embedded-in-aurora .kpi-card {
-      background: #1e293b;
-      border-color: rgba(255, 255, 255, 0.1);
+      background: #FFFFFF;
+      border-color: #E3EAF4;
+      box-shadow: 0 4px 16px rgba(38, 63, 114, 0.04);
+      border-radius: 14px;
     }
-    body.embedded-in-aurora .kpi-card .label { color: #94a3b8; }
-    body.embedded-in-aurora .kpi-card .value { color: #f8fafc; }
+    body.embedded-in-aurora .kpi-card .label { color: #667085; }
+    body.embedded-in-aurora .kpi-card .value { color: #1C2533; font-weight: 700; }
     body.embedded-in-aurora #profit-caveats,
     body.embedded-in-aurora #campaigns-recs {
-      background: rgba(234, 179, 8, 0.1);
-      border-color: rgba(234, 179, 8, 0.35);
-      color: #fde68a;
+      background: #FFFBEB;
+      border-color: #FDE68A;
+      color: #92400E;
+      border-radius: 12px;
     }
-    body.embedded-in-aurora #profit-caveats strong { color: #fef3c7; }
+    body.embedded-in-aurora #profit-caveats strong { color: #78350F; }
     body.embedded-in-aurora #profit-caveats code {
-      background: rgba(0, 0, 0, 0.25);
-      color: #fef3c7;
+      background: #FEF3C7;
+      color: #78350F;
       padding: 1px 4px;
       border-radius: 4px;
     }
@@ -1385,77 +1442,85 @@
     body.embedded-in-aurora #restock-toolbar h2,
     body.embedded-in-aurora #orders-toolbar h2,
     body.embedded-in-aurora #campaigns-toolbar h2,
-    body.embedded-in-aurora #profit-toolbar h2 { color: #f8fafc; }
+    body.embedded-in-aurora #profit-toolbar h2 { color: #1C2533; }
     body.embedded-in-aurora #restock-stamp,
     body.embedded-in-aurora #orders-stamp,
     body.embedded-in-aurora #campaigns-stamp,
-    body.embedded-in-aurora #profit-stamp { color: #94a3b8; }
+    body.embedded-in-aurora #profit-stamp { color: #667085; }
     body.embedded-in-aurora #restock-count {
-      background: rgba(30, 139, 255, 0.15);
-      color: #93c5fd;
-      border: 1px solid rgba(30, 139, 255, 0.25);
+      background: #EEF3FA;
+      color: #4D669B;
+      border: 1px solid #E3EAF4;
     }
-    body.embedded-in-aurora #restock-show-no-demand-label { color: #cbd5e1; }
+    body.embedded-in-aurora #restock-show-no-demand-label { color: #1C2533; }
     body.embedded-in-aurora #restock-toolbar button,
     body.embedded-in-aurora #orders-toolbar #orders-refresh,
     body.embedded-in-aurora #campaigns-refresh,
     body.embedded-in-aurora #profit-refresh {
-      background: #1e8bff;
+      background: #4D669B;
       color: #fff;
       border: none;
+      border-radius: 10px;
+      font-weight: 600;
     }
     body.embedded-in-aurora #restock-toolbar button.secondary {
-      background: #1e293b;
-      color: #e2e8f0;
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: #EEF3FA;
+      color: #1C2533;
+      border: 1px solid #E3EAF4;
     }
     body.embedded-in-aurora #restock-settings {
-      background: #1e293b;
-      border-color: rgba(255, 255, 255, 0.1);
-      color: #e2e8f0;
+      background: #FFFFFF;
+      border-color: #E3EAF4;
+      color: #1C2533;
+      border-radius: 14px;
     }
-    body.embedded-in-aurora #restock-settings label { color: #94a3b8; }
+    body.embedded-in-aurora #restock-settings label { color: #667085; }
     body.embedded-in-aurora #restock-settings input {
-      background: #0f172a;
-      border-color: rgba(255, 255, 255, 0.12);
-      color: #f8fafc;
+      background: #FFFFFF;
+      border-color: #E3EAF4;
+      color: #1C2533;
     }
     body.embedded-in-aurora #restock-empty,
     body.embedded-in-aurora #orders-empty,
     body.embedded-in-aurora #campaigns-empty,
     body.embedded-in-aurora #profit-empty {
-      background: #1e293b;
-      border-color: rgba(255, 255, 255, 0.12);
-      color: #94a3b8;
+      background: #FFFFFF;
+      border-color: #E3EAF4;
+      color: #667085;
+      border-radius: 16px;
     }
-    body.embedded-in-aurora #restock-empty strong { color: #e2e8f0; }
+    body.embedded-in-aurora #restock-empty strong { color: #1C2533; }
     body.embedded-in-aurora .restock-loading {
-      background: rgba(30, 139, 255, 0.12);
-      border-color: rgba(30, 139, 255, 0.35);
-      color: #93c5fd;
+      background: #EEF3FA;
+      border-color: #E3EAF4;
+      color: #4D669B;
+      border-radius: 12px;
     }
     body.embedded-in-aurora .restock-loading-spinner {
-      border-color: rgba(147, 197, 253, 0.35);
-      border-top-color: #93c5fd;
+      border-color: #CBD5E1;
+      border-top-color: #4D669B;
     }
     body.embedded-in-aurora #sku-drawer {
-      background: #1e293b;
-      box-shadow: -12px 0 40px rgba(0, 0, 0, 0.5);
+      background: #FFFFFF;
+      box-shadow: -12px 0 40px rgba(38, 63, 114, 0.12);
     }
     body.embedded-in-aurora #sku-drawer .drawer-body {
-      background: #1e293b;
-      color: #e2e8f0;
+      background: #FFFFFF;
+      color: #1C2533;
     }
     body.embedded-in-aurora #orders-toolbar label,
     body.embedded-in-aurora #profit-toolbar label {
-      color: #94a3b8;
+      color: #667085;
     }
     body.embedded-in-aurora #orders-toolbar select,
     body.embedded-in-aurora #orders-toolbar input,
-    body.embedded-in-aurora #profit-toolbar input {
-      background: #1e293b;
-      border-color: rgba(255, 255, 255, 0.12);
-      color: #f8fafc;
+    body.embedded-in-aurora #profit-toolbar input,
+    body.embedded-in-aurora #restock-toolbar input,
+    body.embedded-in-aurora #restock-toolbar select {
+      background: #FFFFFF;
+      border-color: #E3EAF4;
+      color: #1C2533;
+      border-radius: 10px;
     }
 
     /* ── Keyword Matrix view ────────────────────────────── */
@@ -1560,19 +1625,12 @@
       border-radius: 4px; font-size: 13px; display: none;
     }
 
-    /* Global dark mode — invert the whole page, then counter-invert
-       raster/vector assets so photos and icons still read normally. The
-       hue-rotate keeps accent colors close to their intended hue. */
     html {
-      background: #0f172a;
-      filter: invert(0.92) hue-rotate(180deg);
-    }
-    img, video, svg, canvas, iframe, .no-dark-invert {
-      filter: invert(1) hue-rotate(180deg);
+      background: transparent;
     }
   </style>
 </head>
-<body>
+<body class="embedded-in-aurora">
 
   <!-- Login overlay -->
   <div id="login-overlay">

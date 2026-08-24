@@ -1,19 +1,19 @@
 /* Apple-Inspired Orders Page & Drawer CSS */
 
 .apple-orders-page {
-  --bg-color: #FBFBFD;
-  --text-main: #1D1D1F;
-  --text-muted: #86868B;
-  --primary-blue: #0071e3;
-  --primary-hover: #0059b5;
-  --border-color: #E5E5EA;
+  --bg-color: transparent;
+  --text-main: #000000;
+  --text-muted: #0A0F1D;
+  --primary-blue: #4D669B;
+  --primary-hover: #3F5A90;
+  --border-color: #E8EEF6;
   --card-bg: #FFFFFF;
-  --table-header-bg: #F5F5F7;
+  --table-header-bg: #F8FAFC;
 
   background-color: var(--bg-color);
   color: var(--text-main);
-  min-height: calc(100vh - 70px);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  min-height: calc(100vh - 80px);
+
   -webkit-font-smoothing: antialiased;
 }
 
@@ -22,12 +22,12 @@
 }
 
 .apple-orders-container {
-  max-width: 1440px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 2.5rem 2rem 4rem;
+  padding: 2rem 1.5rem 4rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.75rem;
 }
 
 /* Header Section */
@@ -49,7 +49,7 @@
 .apple-orders-title {
   font-size: 2rem;
   line-height: 2.25rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--text-main);
   margin: 0 0 0.35rem;
@@ -87,7 +87,7 @@
   font-weight: 500;
   color: var(--text-muted);
   padding: 0.5rem 0.85rem;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s ease;
@@ -95,25 +95,27 @@
 
 .apple-status-tab:hover {
   color: var(--text-main);
-  background-color: rgba(0, 0, 0, 0.02);
+  background-color: #EEF3FA;
 }
 
 .apple-status-tab.active {
-  color: var(--primary-blue);
-  background-color: rgba(0, 113, 227, 0.08);
+  color: #4D669B;
+  background-color: #EEF3FA;
   font-weight: 600;
 }
 
 /* Search & Filter Bar */
 .apple-filter-card {
-  background-color: #FFFFFF;
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 1rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.04) 100%);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
+  padding: 1.1rem 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-shadow: inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.7), 0 12px 36px rgba(25, 45, 90, 0.07), 0 2px 6px rgba(25, 45, 90, 0.03);
 }
 
 .apple-search-row {
@@ -144,10 +146,10 @@
 
 .apple-search-input {
   width: 100%;
-  background-color: #FFFFFF;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.55rem 0.85rem 0.55rem 2.25rem;
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 12px;
+  padding: 0.6rem 0.85rem 0.6rem 2.25rem;
   font-size: 0.88rem;
   color: var(--text-main);
   outline: none;
@@ -156,15 +158,17 @@
 
 .apple-search-input:focus {
   border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.12);
+  box-shadow: 0 0 0 3px rgba(77, 102, 155, 0.12);
 }
 
 /* Table Card */
 .apple-table-card {
-  background-color: #FFFFFF;
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.04) 100%);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
+  box-shadow: inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.7), 0 12px 36px rgba(25, 45, 90, 0.07), 0 2px 6px rgba(25, 45, 90, 0.03);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -261,7 +265,7 @@
   right: 0;
   bottom: 0;
   width: min(580px, 100vw);
-  background-color: #FFFFFF;
+  background-color: var(--card-bg);
   box-shadow: -10px 0 40px rgba(0, 0, 0, 0.15);
   z-index: 201;
   display: flex;
@@ -285,7 +289,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #FFFFFF;
+  background-color: var(--card-bg);
 }
 
 .apple-drawer-title {
@@ -310,7 +314,7 @@
 }
 
 .apple-drawer-close:hover {
-  background-color: #F5F5F7;
+  background-color: var(--card-bg);
   color: var(--text-main);
 }
 
@@ -368,7 +372,7 @@
   display: flex;
   gap: 0.85rem;
   align-items: flex-start;
-  background: #FBFBFD;
+  background: transparent;
   border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 0.85rem;

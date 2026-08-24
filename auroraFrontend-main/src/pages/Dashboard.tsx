@@ -23,7 +23,7 @@ const STATUS_COLORS: Record<string, string> = {
   Unshipped: '#af52de',
   Pending: '#ff9500',
   Cancelled: '#ff3b30',
-  Returned: '#8e8e93',
+  Returned: 'var(--field-muted)',
   Other: '#aeaeb2',
 };
 
@@ -110,11 +110,12 @@ function formatPeriodLabel(period: OrderAnalytics['period'] | undefined) {
   return `Last ${period.days} days`;
 }
 
-function formatComparison(current: number, previous: number) {
+function formatComparison(current: number, previous: number): string | null {
   if (!previous) {
-    return previous === 0 && current > 0 ? '+100%' : 'No change';
+    return previous === 0 && current > 0 ? '+100%' : null;
   }
   const change = ((current - previous) / previous) * 100;
+  if (Math.abs(change) < 0.01) return null;
   const sign = change >= 0 ? '+' : '';
   return `${sign}${change.toFixed(1)}% vs prior`;
 }
@@ -391,34 +392,68 @@ export default function Dashboard() {
         {/* KPI Section */}
         <section className="apple-kpi-grid">
           <div className="apple-kpi-card">
-            <span className="apple-kpi-label">Orders</span>
+            <div className="apple-kpi-header">
+              <span className="apple-kpi-label">Orders</span>
+              <div className="apple-kpi-icon-badge">
+                <span className="material-symbols-outlined">shopping_bag</span>
+              </div>
+            </div>
             <div className="apple-kpi-value-row">
               <span className="apple-kpi-number">{summary.totalOrders.toLocaleString()}</span>
-              <span className="apple-kpi-trend">{formatComparison(summary.totalOrders, previous.totalOrders)}</span>
+              {formatComparison(summary.totalOrders, previous.totalOrders) && (
+                <span className="apple-kpi-trend">
+                  {formatComparison(summary.totalOrders, previous.totalOrders)}
+                </span>
+              )}
             </div>
           </div>
 
           <div className="apple-kpi-card">
-            <span className="apple-kpi-label">Revenue</span>
+            <div className="apple-kpi-header">
+              <span className="apple-kpi-label">Revenue</span>
+              <div className="apple-kpi-icon-badge">
+                <span className="material-symbols-outlined">attach_money</span>
+              </div>
+            </div>
             <div className="apple-kpi-value-row">
               <span className="apple-kpi-number">{formatMoney(summary.totalRevenue)}</span>
-              <span className="apple-kpi-trend">{formatComparison(summary.totalRevenue, previous.totalRevenue)}</span>
+              {formatComparison(summary.totalRevenue, previous.totalRevenue) && (
+                <span className="apple-kpi-trend">
+                  {formatComparison(summary.totalRevenue, previous.totalRevenue)}
+                </span>
+              )}
             </div>
           </div>
 
           <div className="apple-kpi-card">
-            <span className="apple-kpi-label">Avg. Order Value</span>
+            <div className="apple-kpi-header">
+              <span className="apple-kpi-label">Avg. Order Value</span>
+              <div className="apple-kpi-icon-badge">
+                <span className="material-symbols-outlined">trending_up</span>
+              </div>
+            </div>
             <div className="apple-kpi-value-row">
               <span className="apple-kpi-number">{formatMoney(summary.averageOrderValue)}</span>
-              <span className="apple-kpi-trend">{formatComparison(summary.averageOrderValue, previous.averageOrderValue)}</span>
+              {formatComparison(summary.averageOrderValue, previous.averageOrderValue) && (
+                <span className="apple-kpi-trend">
+                  {formatComparison(summary.averageOrderValue, previous.averageOrderValue)}
+                </span>
+              )}
             </div>
           </div>
 
           <div className="apple-kpi-card">
-            <span className="apple-kpi-label">Active Products</span>
+            <div className="apple-kpi-header">
+              <span className="apple-kpi-label">Active Products</span>
+              <div className="apple-kpi-icon-badge">
+                <span className="material-symbols-outlined">inventory_2</span>
+              </div>
+            </div>
             <div className="apple-kpi-value-row">
               <span className="apple-kpi-number">{productCounts.active.toLocaleString()}</span>
-              <span className="apple-kpi-trend">{productCounts.listed > 0 ? `${productCounts.listed} listed` : 'No change'}</span>
+              {productCounts.listed > 0 && (
+                <span className="apple-kpi-trend">{`${productCounts.listed} listed`}</span>
+              )}
             </div>
           </div>
         </section>
@@ -427,13 +462,16 @@ export default function Dashboard() {
         <section className="apple-analytics-grid">
           {/* Revenue Column */}
           <div className="apple-card">
-            <div>
-              <h2 className="apple-card-title">Revenue performance</h2>
-              <div className="apple-card-amount">{formatMoney(summary.totalRevenue)}</div>
-              <span className="apple-card-sublabel">{periodLabel}</span>
+            <div className="apple-card-header-bar">
+              <div>
+                <h2 className="apple-card-title">Revenue performance</h2>
+                <div className="apple-card-amount">{formatMoney(summary.totalRevenue)}</div>
+                <span className="apple-card-sublabel">{periodLabel}</span>
+              </div>
+              <span className="apple-card-badge">Analytics</span>
             </div>
 
-            <div style={{ width: '100%', height: 240, marginTop: '1.5rem' }}>
+            <div style={{ width: '100%', height: 240, marginTop: '1rem' }}>
               {revenueChartData.some((row) => row.revenue > 0) ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={revenueChartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
@@ -441,7 +479,7 @@ export default function Dashboard() {
                     <XAxis
                       dataKey="label"
                       tick={{ fill: '#86868B', fontSize: 11 }}
-                      axisLine={{ stroke: '#E5E5EA' }}
+                      axisLine={{ stroke: 'var(--border)' }}
                       tickLine={false}
                     />
                     <YAxis
@@ -452,8 +490,8 @@ export default function Dashboard() {
                     />
                     <Tooltip
                       contentStyle={{
-                        background: '#FFFFFF',
-                        border: '1px solid #E5E5EA',
+                        background: 'var(--card-bg)',
+                        border: '1px solid var(--border)',
                         borderRadius: '10px',
                         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
                         color: '#1D1D1F',
@@ -461,13 +499,17 @@ export default function Dashboard() {
                       }}
                       formatter={(value) => [formatMoney(Number(value ?? 0)), 'Revenue']}
                     />
-                    <Bar dataKey="revenue" fill="#0071e3" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="revenue" fill="#4D669B" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="apple-empty-state" style={{ minHeight: 200, padding: 0 }}>
+                <div className="apple-empty-state" style={{ minHeight: 180, padding: '1.5rem' }}>
+                  <div className="apple-empty-icon">
+                    <span className="material-symbols-outlined">bar_chart</span>
+                  </div>
+                  <h3 className="apple-empty-heading">No revenue data</h3>
                   <p className="apple-empty-text" style={{ margin: 0 }}>
-                    No revenue data recorded for {periodLabel.toLowerCase()}.
+                    No revenue recorded for {periodLabel.toLowerCase()}.
                   </p>
                 </div>
               )}
@@ -478,8 +520,13 @@ export default function Dashboard() {
           <div className="apple-card" style={{ justifyContent: 'center' }}>
             {summary.totalOrders > 0 || pieData.length > 0 ? (
               <div>
-                <h2 className="apple-card-title" style={{ marginBottom: '0.25rem' }}>Order status distribution</h2>
-                <span className="apple-card-sublabel">{periodLabel}</span>
+                <div className="apple-card-header-bar">
+                  <div>
+                    <h2 className="apple-card-title">Order status distribution</h2>
+                    <span className="apple-card-sublabel">{periodLabel}</span>
+                  </div>
+                  <span className="apple-card-badge">Breakdown</span>
+                </div>
                 <div style={{ width: '100%', height: 240, marginTop: '1rem' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -499,8 +546,8 @@ export default function Dashboard() {
                       </Pie>
                       <Tooltip
                         contentStyle={{
-                          background: '#FFFFFF',
-                          border: '1px solid #E5E5EA',
+                          background: 'var(--card-bg)',
+                          border: '1px solid var(--border)',
                           borderRadius: '10px',
                           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
                         }}
@@ -513,13 +560,11 @@ export default function Dashboard() {
             ) : (
               <div className="apple-empty-state">
                 <div className="apple-empty-icon">
-                  <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>
-                    shopping_bag
-                  </span>
+                  <span className="material-symbols-outlined">shopping_bag</span>
                 </div>
-                <h3 className="apple-empty-heading">No orders yet</h3>
+                <h3 className="apple-empty-heading">No orders recorded yet</h3>
                 <p className="apple-empty-text">
-                  Sync your Amazon store to start seeing order activity and track your fulfillment.
+                  Sync your Amazon store to start tracking fulfillment, sales performance, and order status breakdown.
                 </p>
                 <button
                   type="button"
@@ -527,7 +572,7 @@ export default function Dashboard() {
                   onClick={handleSync}
                   disabled={loading}
                 >
-                  Sync now
+                  Sync store now
                   <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
                     arrow_forward
                   </span>

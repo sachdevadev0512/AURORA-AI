@@ -19,6 +19,9 @@ from fastapi import Depends, Header, HTTPException, WebSocket, status
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from token_encryption import hydrate_user_tokens
+from dotenv import load_dotenv
+
+load_dotenv()
 
 MONGO_URI = os.getenv("MONGO_URI", "")
 JWT_SECRET = os.getenv("JWT_SECRET", "")
@@ -37,7 +40,7 @@ def _db() -> AsyncIOMotorDatabase:
     if not MONGO_URI:
         raise RuntimeError("MONGO_URI is not configured")
     if _client is None:
-        _client = AsyncIOMotorClient(MONGO_URI)
+        _client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=2000)
     return _client[MONGO_DB_NAME or "test"]
 
 

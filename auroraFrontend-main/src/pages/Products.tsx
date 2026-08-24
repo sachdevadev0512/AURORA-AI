@@ -340,21 +340,21 @@ export default function Products() {
             <table className="apple-table">
               <thead>
                 <tr>
-                  <th style={{ width: '180px' }}>Product</th>
-                  <th style={{ width: '110px' }}>EAN</th>
-                  <th style={{ width: '100px' }}>Condition</th>
-                  <th style={{ width: '90px' }}>Status</th>
-                  <th style={{ width: '110px' }}>Listing Status</th>
-                  <th style={{ width: '100px' }}>Fulfillment</th>
-                  <th style={{ width: '90px', textAlign: 'right' }}>Available</th>
-                  <th style={{ width: '90px', textAlign: 'right' }}>Inbound</th>
-                  <th style={{ width: '90px', textAlign: 'right' }}>Reserved</th>
-                  <th style={{ width: '110px', textAlign: 'right' }}>Unfulfillable</th>
-                  <th style={{ width: '90px', textAlign: 'right' }}>Price</th>
-                  <th style={{ width: '90px', textAlign: 'right' }}>Min Price</th>
-                  <th style={{ width: '90px', textAlign: 'right' }}>Max Price</th>
-                  <th style={{ width: '110px', textAlign: 'right' }}>Business Price</th>
-                  <th className="apple-table-sticky-actions" style={{ width: '80px', textAlign: 'center' }}>
+                  <th style={{ minWidth: '300px', width: '100%' }}>Product</th>
+                  <th style={{ minWidth: '120px' }}>EAN</th>
+                  <th style={{ minWidth: '110px' }}>Condition</th>
+                  <th style={{ minWidth: '100px' }}>Status</th>
+                  <th style={{ minWidth: '120px' }}>Listing Status</th>
+                  <th style={{ minWidth: '110px' }}>Fulfillment</th>
+                  <th style={{ minWidth: '100px', textAlign: 'right' }}>Available</th>
+                  <th style={{ minWidth: '100px', textAlign: 'right' }}>Inbound</th>
+                  <th style={{ minWidth: '100px', textAlign: 'right' }}>Reserved</th>
+                  <th style={{ minWidth: '120px', textAlign: 'right' }}>Unfulfillable</th>
+                  <th style={{ minWidth: '100px', textAlign: 'right' }}>Price</th>
+                  <th style={{ minWidth: '100px', textAlign: 'right' }}>Min Price</th>
+                  <th style={{ minWidth: '100px', textAlign: 'right' }}>Max Price</th>
+                  <th style={{ minWidth: '120px', textAlign: 'right' }}>Business Price</th>
+                  <th className="apple-table-sticky-actions" style={{ minWidth: '90px', textAlign: 'center' }}>
                     Actions
                   </th>
                 </tr>
@@ -362,14 +362,14 @@ export default function Products() {
               <tbody>
                 {loading && products.length === 0 ? (
                   <tr>
-                    <td colSpan={15} style={{ textAlign: 'center', padding: '4rem 1rem', color: '#5e5e63' }}>
+                    <td colSpan={15} style={{ textAlign: 'center', padding: '4rem 1rem', color: 'var(--field-muted)' }}>
                       Loading inventory...
                     </td>
                   </tr>
                 ) : products.length === 0 ? (
                   <tr>
                     <td colSpan={15} style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#5e5e63' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: 'var(--field-muted)' }}>
                         <span
                           className="material-symbols-outlined"
                           style={{ fontSize: '64px', opacity: 0.35, marginBottom: '0.75rem' }}
@@ -395,7 +395,7 @@ export default function Products() {
                               <img
                                 src={imgUrl}
                                 alt=""
-                                style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 6, border: '1px solid #c1c6d6' }}
+                                style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 6, border: '1px solid var(--border)' }}
                               />
                             ) : (
                               <div
@@ -403,11 +403,11 @@ export default function Products() {
                                   width: 36,
                                   height: 36,
                                   borderRadius: 6,
-                                  backgroundColor: '#ecedf7',
+                                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                  color: '#5e5e63',
+                                  color: 'var(--field-muted)',
                                 }}
                               >
                                 <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
@@ -420,12 +420,12 @@ export default function Products() {
                                 href={amazonUrl || undefined}
                                 target="_blank"
                                 rel="noreferrer"
-                                style={{ fontWeight: 600, color: '#181c23', textDecoration: 'none' }}
+                                style={{ fontWeight: 600, color: 'var(--field-text)', textDecoration: 'none' }}
                                 title={product.title}
                               >
                                 {product.title}
                               </a>
-                              <span style={{ fontSize: '0.75rem', color: '#5e5e63' }}>
+                              <span style={{ fontSize: '0.75rem', color: 'var(--field-muted)' }}>
                                 SKU: {product.sku} | ASIN: {product.asin}
                               </span>
                             </div>
