@@ -1,14 +1,26 @@
 # Dependencies
 node_modules/
+**/node_modules/
 
 # Environment files
 .env
 .env.local
 .env.*.local
+**/.env
+**/.env.*
+
+# Python
+__pycache__/
+**/__pycache__/
+*.pyc
+.venv/
+**/.venv/
 
 # Build outputs
 dist/
+**/dist/
 build/
+**/build/
 *.tsbuildinfo
 
 # Logs & OS metadata
