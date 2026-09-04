@@ -75,7 +75,11 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
         </button>
 
         <div className="aurora-auth-header">
-          <div className="aurora-auth-badge">A</div>
+          <img
+            src="/aurora-logo.png"
+            alt="Aurora AI Logo"
+            className="aurora-auth-badge-img"
+          />
           <h2 className="aurora-auth-title">
             {isLogin ? 'Sign in to Aurora AI' : 'Create Seller Account'}
           </h2>

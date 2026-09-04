@@ -4,7 +4,7 @@
   color-scheme: light;
   font-family: 'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-optical-sizing: auto;
-  background: #E8EEF6;
+  background: #CDD9E4;
   color: #000000;
   --primary: #3B5488;
   --primary-hover: #2D426E;
@@ -13,24 +13,32 @@
   --success: #059669;
   --warning: #D97706;
   --error: #DC2626;
-  --card-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.04) 100%);
-  --border: rgba(255, 255, 255, 0.5);
-  --field-bg: rgba(255, 255, 255, 0.15);
-  --field-bg-hover: rgba(255, 255, 255, 0.28);
-  --field-border: rgba(255, 255, 255, 0.35);
+
+  /* Glass Slab Master Tokens */
+  --glass-slab-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.68) 0%, rgba(255, 255, 255, 0.38) 100%);
+  --glass-slab-border: 1px solid rgba(255, 255, 255, 0.75);
+  --glass-slab-shadow: inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.4), 0 14px 36px rgba(25, 55, 115, 0.08), 0 2px 6px rgba(25, 55, 115, 0.03);
+  --glass-slab-shadow-hover: inset 0 2px 2px 0 rgba(255, 255, 255, 1), inset 0 -1px 1.5px 0 rgba(255, 255, 255, 0.55), 0 20px 48px rgba(25, 55, 115, 0.12), 0 4px 10px rgba(25, 55, 115, 0.05);
+  --glass-slab-blur: blur(24px) saturate(190%);
+
+  --card-bg: var(--glass-slab-bg);
+  --border: rgba(255, 255, 255, 0.75);
+  --field-bg: rgba(255, 255, 255, 0.45);
+  --field-bg-hover: rgba(255, 255, 255, 0.60);
+  --field-border: rgba(255, 255, 255, 0.65);
   --field-border-focus: #3B5488;
   --field-text: #000000;
-  --field-muted: #1E293B;
+  --field-muted: #000000;
   --field-option-bg: #FFFFFF;
   --field-option-bg-active: #F1F5F9;
   --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   
   --card-radius: 24px;
   --button-radius: 12px;
-  --card-shadow: inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.7), 0 12px 36px rgba(25, 45, 90, 0.07), 0 2px 6px rgba(25, 45, 90, 0.03);
-  --card-shadow-hover: inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.85), 0 18px 48px rgba(25, 45, 90, 0.11), 0 4px 10px rgba(25, 45, 90, 0.05);
-  --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.04) 100%);
-  --glass-border: rgba(255, 255, 255, 0.5);
+  --card-shadow: var(--glass-slab-shadow);
+  --card-shadow-hover: var(--glass-slab-shadow-hover);
+  --glass-bg: var(--glass-slab-bg);
+  --glass-border: rgba(255, 255, 255, 0.75);
 }
 
 * {
@@ -40,13 +48,8 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: #E2EBF6;
-  background-image: 
-    radial-gradient(at 88% 0%, rgba(55, 88, 148, 0.38) 0px, transparent 55%),
-    radial-gradient(at 15% 10%, rgba(165, 195, 235, 0.6) 0px, transparent 48%),
-    radial-gradient(at 55% 35%, rgba(215, 228, 245, 0.7) 0px, transparent 60%),
-    radial-gradient(at 90% 90%, rgba(175, 202, 236, 0.35) 0px, transparent 50%),
-    linear-gradient(180deg, #D0DEF0 0%, #E2EAF5 35%, #EFF4FA 100%);
+  background-color: #CDD9E4;
+  background-image: linear-gradient(180deg, #C4D3DF 0%, #CDD9E4 25%, #D4DEE8 55%, #DBE5ED 80%, #E4EDF3 100%);
   background-attachment: fixed;
   color: #000000;
   font-family: 'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
@@ -65,8 +68,14 @@ body {
 .page-transition-container {
   width: 100%;
   min-height: calc(100vh - 80px);
-  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
+  color: #000000;
+}
+
+/* Force all page content text to black (navbar overrides this with !important white rules) */
+.page-transition-container *:not(.navbar):not(.navbar *):not(.apple-btn-primary):not(.apple-btn-primary *) {
+  color: #000000;
 }
 
 .page-transition-container.fadeIn {
@@ -77,6 +86,37 @@ body {
 .page-transition-container.fadeOut {
   opacity: 0;
   transform: translateY(8px) scale(0.99);
+}
+
+/* Smooth Arrival when transitioning from Landing Page to Dashboard */
+@keyframes landingNavbarSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-26px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landingContentSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(44px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.navbar-sticky-wrapper.landing-arrival {
+  animation: landingNavbarSlideDown 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.page-transition-container.landing-arrival {
+  animation: landingContentSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
 }
 
 a {
@@ -103,19 +143,19 @@ button {
 
 .card {
   background: var(--card-bg);
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
-  border: 1px solid var(--border);
+  backdrop-filter: var(--glass-slab-blur);
+  -webkit-backdrop-filter: var(--glass-slab-blur);
+  border: var(--glass-slab-border);
   border-radius: var(--card-radius);
-  box-shadow: var(--card-shadow);
+  box-shadow: var(--glass-slab-shadow);
   padding: 1.25rem 1.5rem;
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
 }
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--card-shadow-hover);
-  border-color: rgba(255, 255, 255, 0.85);
+  box-shadow: var(--glass-slab-shadow-hover);
+  border-color: rgba(255, 255, 255, 0.9);
 }
 
 .grid {
@@ -516,54 +556,75 @@ select.input:focus {
 
 .table {
   width: 100%;
-  border-collapse: collapse;
-  background: #FFFFFF;
-  border-radius: 1rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--glass-slab-bg);
+  backdrop-filter: var(--glass-slab-blur);
+  -webkit-backdrop-filter: var(--glass-slab-blur);
+  border: var(--glass-slab-border);
+  border-radius: var(--card-radius);
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(38, 63, 114, 0.05);
+  box-shadow: var(--glass-slab-shadow);
 }
 
 .table th,
 .table td {
   padding: 1rem 1.25rem;
   text-align: left;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 .table th {
-  color: var(--text-muted);
-  background: #F8FAFC;
+  color: #1E293B;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.48) 100%);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
   font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.65);
 }
 
-.table tbody tr:hover {
-  background: #F8FAFC;
+.table tbody tr {
+  transition: background-color 0.16s ease;
 }
 
-/* Global Sticky Actions Column Overlap Prevention */
+.table tbody tr:hover td {
+  background-color: rgba(255, 255, 255, 0.42);
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Global Sticky Actions Column Overlap Prevention - Translucent frosted slab */
 .apple-table-sticky-actions,
 th.apple-table-sticky-actions,
 td.apple-table-sticky-actions {
   position: sticky !important;
   right: 0 !important;
   z-index: 15 !important;
-  box-shadow: -8px 0 16px -3px rgba(38, 63, 114, 0.16) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  box-shadow: -8px 0 20px -3px rgba(35, 65, 120, 0.14) !important;
 }
 
 th.apple-table-sticky-actions {
-  background: #D2E0F0 !important;
-  color: #1C2533 !important;
+  background: rgba(215, 230, 248, 0.95) !important;
+  color: #0F172A !important;
   font-weight: 600 !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.7) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.65) !important;
   z-index: 25 !important;
 }
 
 td.apple-table-sticky-actions {
-  background: #DFE9F5 !important;
-  color: #1C2533 !important;
+  background: rgba(226, 238, 251, 0.92) !important;
+  color: #0F172A !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.5) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35) !important;
 }
 
 tr:hover td.apple-table-sticky-actions {
-  background: #D2E0F0 !important;
+  background: rgba(215, 230, 248, 0.98) !important;
 }
 
 .splash {
@@ -1175,28 +1236,49 @@ tr:hover td.apple-table-sticky-actions {
 
 .table-wrap {
   overflow-x: auto;
-  border-radius: 1rem;
-  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  border: var(--glass-slab-border);
+  background: var(--glass-slab-bg);
+  backdrop-filter: var(--glass-slab-blur);
+  -webkit-backdrop-filter: var(--glass-slab-blur);
+  box-shadow: var(--glass-slab-shadow);
 }
 
 .data-table {
   width: 100%;
-  border-collapse: collapse;
-  background: rgba(255, 255, 255, 0.04);
+  border-collapse: separate;
+  border-spacing: 0;
+  background: transparent;
 }
 
 .data-table th,
 .data-table td {
   padding: 0.9rem 1rem;
   text-align: left;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
   vertical-align: top;
 }
 
 .data-table th {
-  color: rgba(255, 255, 255, 0.7);
+  color: #1E293B;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.48) 100%);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
   font-weight: 600;
   white-space: nowrap;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.65);
+}
+
+.data-table tbody tr {
+  transition: background-color 0.16s ease;
+}
+
+.data-table tbody tr:hover td {
+  background-color: rgba(255, 255, 255, 0.42);
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
 }
 
 .cell-primary {
@@ -1321,10 +1403,20 @@ tr:hover td.apple-table-sticky-actions {
 }
 
 .detail-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 20px;
+  background: var(--glass-slab-bg);
+  backdrop-filter: var(--glass-slab-blur);
+  -webkit-backdrop-filter: var(--glass-slab-blur);
+  border: var(--glass-slab-border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--glass-slab-shadow);
   padding: 1.5rem;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+
+.detail-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glass-slab-shadow-hover);
+  border-color: rgba(255, 255, 255, 0.9);
 }
 
 .detail-card-header {
@@ -2297,4 +2389,180 @@ tr:hover td.apple-table-sticky-actions {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   GLASS SLAB ARCHITECTURE FOR ALL DASHBOARD & APP PAGES
+   (Translucent frosted glassmorphism, specular rim highlights, ambient blur)
+   ========================================================================== */
+
+/* Universal Glass Slab utility & core component mapping */
+.glass-slab,
+.apple-kpi-card,
+.apple-card,
+.apple-table-card,
+.apple-search-card,
+.apple-filter-card,
+.pricing-kpi,
+.rp-wizard,
+.apple-status-banner,
+.apple-settings-panel,
+.apple-auth-card,
+.rp-selected-box,
+.rp-review-card,
+.apple-custom-date-container {
+  background: var(--glass-slab-bg) !important;
+  backdrop-filter: var(--glass-slab-blur) !important;
+  -webkit-backdrop-filter: var(--glass-slab-blur) !important;
+  border: var(--glass-slab-border) !important;
+  box-shadow: var(--glass-slab-shadow) !important;
+}
+
+.glass-slab:hover,
+.apple-kpi-card:hover,
+.apple-card:hover,
+.apple-search-card:hover,
+.apple-filter-card:hover,
+.pricing-kpi:hover,
+.apple-status-banner:hover,
+.rp-review-card:hover {
+  box-shadow: var(--glass-slab-shadow-hover) !important;
+  border-color: rgba(255, 255, 255, 0.9) !important;
+  transform: translateY(-2px);
+}
+
+/* Glass Slab Tables across all inner pages */
+.apple-table-card,
+.table-wrap,
+.orders-table-container,
+.product-table-container {
+  background: var(--glass-slab-bg) !important;
+  backdrop-filter: var(--glass-slab-blur) !important;
+  -webkit-backdrop-filter: var(--glass-slab-blur) !important;
+  border: var(--glass-slab-border) !important;
+  box-shadow: var(--glass-slab-shadow) !important;
+  border-radius: var(--card-radius) !important;
+  overflow: hidden !important;
+}
+
+.apple-table,
+.data-table,
+.table,
+.rp-logs-table {
+  background: transparent !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.apple-table thead,
+.data-table thead,
+.table thead,
+.rp-logs-table thead {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.48) 100%) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+}
+
+.apple-table th,
+.data-table th,
+.table th,
+.rp-logs-table th {
+  background: transparent !important;
+  color: #1E293B !important;
+  font-weight: 600 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+.apple-table td,
+.data-table td,
+.table td,
+.rp-logs-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35) !important;
+  color: #0F172A !important;
+}
+
+.apple-table tbody tr,
+.data-table tbody tr,
+.table tbody tr,
+.rp-logs-table tbody tr {
+  transition: background-color 0.16s ease !important;
+}
+
+.apple-table tbody tr:hover td,
+.data-table tbody tr:hover td,
+.table tbody tr:hover td,
+.rp-logs-table tbody tr:hover td {
+  background-color: rgba(255, 255, 255, 0.42) !important;
+}
+
+.apple-table tr:last-child td,
+.data-table tr:last-child td,
+.table tr:last-child td,
+.rp-logs-table tr:last-child td {
+  border-bottom: none !important;
+}
+
+/* Frosted Sub-Slabs (Controls, Search Bars, Filter Selects) */
+.apple-search-wrap input,
+.apple-search-input,
+.apple-select,
+.apple-custom-date-container input,
+.repricer-page .repricer-field input,
+.repricer-page .repricer-field select {
+  background-color: rgba(255, 255, 255, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.65) !important;
+  box-shadow: inset 0 1px 2px rgba(25, 50, 95, 0.04) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+}
+
+.apple-search-wrap input:focus,
+.apple-search-input:focus,
+.apple-select:focus,
+.apple-custom-date-container input:focus,
+.repricer-page .repricer-field input:focus,
+.repricer-page .repricer-field select:focus {
+  background-color: rgba(255, 255, 255, 0.75) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(59, 84, 136, 0.15) !important;
+}
+
+.apple-segmented-control {
+  background-color: rgba(255, 255, 255, 0.35) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.65) !important;
+}
+
+.apple-segment-highlighter {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow: inset 0 1px 1px #fff, 0 3px 10px rgba(15, 23, 42, 0.08) !important;
+}
+
+.apple-icon-btn {
+  background: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.85), 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+}
+
+.apple-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: inset 0 1px 1px #fff, 0 4px 14px rgba(41, 72, 152, 0.08) !important;
+}
+
+.apple-empty-state {
+  background: rgba(255, 255, 255, 0.35) !important;
+  border: 1.5px dashed rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+}
+
 

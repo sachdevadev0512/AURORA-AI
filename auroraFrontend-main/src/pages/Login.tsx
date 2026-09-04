@@ -30,8 +30,12 @@ export default function Login() {
     <div className="apple-auth-page">
       <div className="apple-auth-card">
         <div className="apple-auth-logo">
-          <div className="apple-auth-logo-box">A</div>
-          <span style={{ fontSize: '1.2rem', fontWeight: 600 }}>Aurora AI</span>
+          <img
+            src="/aurora-logo.png"
+            alt="Aurora AI Logo"
+            className="apple-auth-logo-img"
+          />
+          <span className="apple-auth-logo-text">Aurora AI</span>
         </div>
 
         <div>

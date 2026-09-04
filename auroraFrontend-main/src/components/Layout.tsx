@@ -21,12 +21,22 @@ const NAV_LINKS = [
 ];
 
 export default function Layout({ children }: LayoutProps) {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isLandingArrival, setIsLandingArrival] = useState(() => Boolean((location.state as any)?.fromLanding));
 
   const [displayLocation, setDisplayLocation] = useState(location);
   const [transitionStage, setTransitionStage] = useState<'fadeIn' | 'fadeOut'>('fadeIn');
+
+  useEffect(() => {
+    if (isLandingArrival) {
+      const timer = setTimeout(() => {
+        setIsLandingArrival(false);
+      }, 900);
+      return () => clearTimeout(timer);
+    }
+  }, [isLandingArrival]);
 
   useEffect(() => {
     if (location.pathname !== displayLocation.pathname) {
@@ -52,16 +62,14 @@ export default function Layout({ children }: LayoutProps) {
       {/* Navbar is ONLY shown on Protected App Pages, NOT on Home Page */}
       {!isHomePage && (
         <header
-          className="navbar-sticky-wrapper"
+          className={`navbar-sticky-wrapper ${isLandingArrival ? 'landing-arrival' : ''}`}
           style={{
             position: 'sticky',
             top: 0,
             zIndex: 100,
             width: '100%',
             padding: '0.65rem 1rem 0.65rem',
-            background: 'linear-gradient(180deg, #D0DEF0 0%, #E2EAF5 85%, rgba(226, 234, 245, 0.95) 100%)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
+            background: 'transparent',
           }}
         >
           <nav
@@ -114,20 +122,30 @@ export default function Layout({ children }: LayoutProps) {
               {/* Right Section */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
                 <NotificationBell />
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="apple-btn-secondary"
-                >
-                  Logout
-                </button>
+                {user ? (
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="apple-btn-secondary"
+                  >
+                    Logout
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/login')}
+                    className="apple-btn-secondary"
+                  >
+                    Login / Sign Up
+                  </button>
+                )}
               </div>
             </div>
           </nav>
         </header>
       )}
 
-      <main key={displayLocation.pathname} className={`page-transition-container ${transitionStage}`}>
+      <main key={displayLocation.pathname} className={`page-transition-container ${transitionStage} ${isLandingArrival ? 'landing-arrival' : ''}`}>
         {children}
       </main>
     </div>
